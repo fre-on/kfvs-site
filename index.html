@@ -8,7 +8,7 @@
 </head>
 <body>
 <!--
-  САЙТ ЦИКЛОВОЇ КОМІСІЇ (бета 1.0)
+  САЙТ ЦИКЛОВОЇ КОМІСІЇ (бета 1.1)
   Весь вміст сайту береться з Google Таблиці; сам файл змінювати не потрібно, крім кількох налаштувань нижче.
 
   УСТАНОВКА: у Google Sites — Вставити → Вбудувати → Код вбудовування; або завантажте як index.html на власний хостинг (тоді FULL_PAGE = true).
@@ -27,6 +27,7 @@
 -->
 <style>
 @import url("https://fonts.googleapis.com/css2?family=Unbounded:wght@700&family=Golos+Text:wght@400;600&display=swap");
+html,body{margin:0}
 .kfvs{--v:#3a0f1a;--vd:#1c070d;--beam:#ffe9b0;--amber:#f2a93b;--bg:#f6f3ee;--ink:#1d1416;--mute:#6a5b5f;--line:#e3dcd2;font:16px/1.55 var(--fb,"Golos Text"),system-ui,sans-serif;color:var(--ink);background:var(--bg);min-height:100vh}
 .kfvs *{box-sizing:border-box}
 .kfvs button{font:inherit;cursor:pointer}
@@ -39,7 +40,7 @@
 /* ---- Каркас: ліва панель + вміст ---- */
 .kfvs .layout{display:grid;grid-template-columns:250px 1fr;min-height:70vh}
 .kfvs .layout.solo{grid-template-columns:1fr}
-.kfvs aside{background:#fff;border-right:1px solid var(--line);padding:20px 12px}
+.kfvs aside{background:var(--panel,#fff);border-right:1px solid var(--line);padding:20px 12px}
 .kfvs aside h3{margin:0 0 10px 12px;font-size:14px;color:var(--mute);font-weight:600}
 .kfvs aside button{display:block;width:100%;text-align:left;border:0;background:transparent;padding:10px 12px;border-left:4px solid transparent;border-radius:0 8px 8px 0;color:var(--ink)}
 .kfvs aside button:hover{background:#f3ece3}
@@ -54,7 +55,7 @@
 .kfvs p{margin:0 0 10px}
 /* ---- Картки ---- */
 .kfvs .cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:16px;margin:16px 0}
-.kfvs .card{display:block;background:#fff;border:1px solid var(--line);border-radius:12px;overflow:hidden;color:inherit;text-decoration:none}
+.kfvs .card{display:block;background:var(--card,#fff);border:1px solid var(--line);border-radius:12px;overflow:hidden;color:inherit;text-decoration:none}
 .kfvs a.card{cursor:pointer}
 .kfvs a.card:hover{border-color:var(--amber);box-shadow:0 4px 14px rgba(58,15,26,.12)}
 .kfvs .card img{display:block;width:100%;aspect-ratio:4/3;object-fit:cover;background:#eee}
@@ -122,8 +123,11 @@
 /* ---- Банер (налаштовується в аркуші «Налаштування») ---- */
 #banner{position:relative;display:flex;align-items:flex-end;background:var(--vd) center/cover no-repeat;color:var(--bc,#fff)}
 #banner[hidden]{display:none}
-#banner::before{content:"";position:absolute;inset:0;background:linear-gradient(transparent 25%,rgba(0,0,0,.55))}
-#banner .bt{position:relative;padding:20px clamp(16px,4vw,44px)}
+#banner::after{content:"";position:absolute;inset:0;z-index:1;background:linear-gradient(transparent 25%,rgba(0,0,0,.55))}
+#bmedia,#bfilm{position:absolute;inset:0;overflow:hidden;z-index:0}
+#bmedia video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+#bmedia iframe{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);border:0;pointer-events:none}
+#banner .bt{position:relative;z-index:2;padding:20px clamp(16px,4vw,44px)}
 #banner b{display:block;font:700 clamp(22px,4vw,44px)/1.1 var(--fh,Unbounded),sans-serif}
 #banner span{display:block;margin-top:6px;font-size:clamp(14px,1.6vw,20px)}
 /* ---- Кнопка «на весь екран» і повноекранний режим ---- */
@@ -157,6 +161,10 @@
 .kfvs .fi span{display:block;padding:8px 10px;font-size:13px;line-height:1.3;overflow-wrap:anywhere}
 .kfvs .pdesc{margin-top:6px}
 .kfvs p{overflow-wrap:anywhere}
+/* ---- Карта з координатами ---- */
+.kfvs .map{position:relative;display:block;max-width:560px;height:240px;margin:8px 0;border:1px solid var(--line);border-radius:12px;overflow:hidden;color:inherit}
+.kfvs .map iframe{width:100%;height:100%;border:0;pointer-events:none}
+.kfvs .mapb{position:absolute;left:10px;bottom:10px;padding:6px 12px;border-radius:8px;background:var(--v);color:#fff;font-size:14px;font-weight:600}
 .kfvs .note{margin:0;padding:8px 16px;background:#fbf1de;color:var(--v);font-size:14px}
 @media(max-width:760px){.kfvs .layout{grid-template-columns:1fr}.kfvs aside{display:flex;gap:6px;overflow-x:auto;padding:10px;border-right:0;border-bottom:1px solid var(--line)}.kfvs aside h3{display:none}.kfvs aside button{width:auto;white-space:nowrap;border:1px solid var(--line);border-radius:999px}.kfvs aside button[aria-current=true]{border-color:var(--amber)}}
 /* ---- Мобільна версія ---- */
@@ -175,7 +183,7 @@
 
 <div class="kfvs" id="kfvs">
   <div class="note" id="note" hidden></div>
-  <header id="banner" hidden><div class="bt"><b id="bt1"></b><span id="bt2"></span></div></header>
+  <header id="banner" hidden><div id="bmedia"></div><div id="bfilm"></div><div class="bt"><b id="bt1"></b><span id="bt2"></span></div></header>
   <nav class="top" id="top" aria-label="Розділи сайту"></nav>
   <div class="layout" id="layout"><aside id="side" aria-label="Підрозділи"></aside><main id="main"><p>Завантаження… Якщо цей напис не зникає, у цьому режимі не виконуються скрипти.</p></main></div>
   <div id="fm" hidden><div class="pmp" role="dialog" aria-modal="true"><button id="fmx" aria-label="Закрити">×</button><h3 id="fmt"></h3><div id="fmc"></div></div></div>
@@ -290,6 +298,14 @@ function active(r){
   const a = parseDate(r["Діє з"]), b = parseDate(r["Діє до"]);
   return !(a && t < a) && !(b && t > b);
 }
+// Розпізнає тип блоку навіть із помилками в написанні («Дипломний фільм» → відео, «Фото 360» → панорама).
+function canonType(s){
+  const t = String(s || "").toLowerCase().replace(/['’ʼ`]/g, "").trim();
+  if (!t) return t;
+  const rules = [[/до[\s-]*після|до і після/, "до-після"], [/панорам|360/, "панорама"], [/галере/, "галерея"], [/відео|фільм|video|ролик|youtube/, "відео"], [/фото|зображ|image|photo/, "фото"], [/карта|мапа|map|координат|маршрут/, "карта"], [/картк|card/, "картка"], [/файл|документ|file/, "файл"], [/вбуд|embed|форма|календар/, "вбудова"], [/посил|link|прев/, "посилання"], [/текст|text|опис/, "текст"]];
+  const hit = rules.find(x => x[0].test(t));
+  return hit ? hit[1] : t;
+}
 // Розбирає CSV-текст на рядки й комірки (лапки, переноси рядків).
 function parseCSV(t){const r=[];let row=[],f="",q=false;for(let i=0;i<t.length;i++){const c=t[i];if(q){if(c==='"'){if(t[i+1]==='"'){f+='"';i++}else q=false}else f+=c}else if(c==='"')q=true;else if(c===","){row.push(f);f=""}else if(c==="\n"||c==="\r"){if(c==="\r"&&t[i+1]==="\n")i++;row.push(f);r.push(row);row=[];f=""}else f+=c}if(f||row.length){row.push(f);r.push(row)}return r}
 
@@ -356,6 +372,7 @@ function build(csv){
   S = new Map(); const ph = new Set();
   rows.forEach(a => {
     const r = {}; h.forEach((k,i) => r[k] = (a[i] ?? "").trim());
+    r["Тип"] = canonType(r["Тип"]);
     if (!r["Розділ"] || /^(ні|no|0)$/i.test(r["Показувати"])) return;
     if (!active(r)) { if (!S.has(r["Розділ"])) { S.set(r["Розділ"], new Map([["", [Object.assign(Object.fromEntries(COLS.map(c => [c, ""])), {"Тип": "текст", "Текст": "Наразі актуальних матеріалів немає."})]]])); ph.add(r["Розділ"]); } return; }
     if (ph.has(r["Розділ"])) { S.get(r["Розділ"]).clear(); ph.delete(r["Розділ"]); }
@@ -466,15 +483,15 @@ function startPano(el, img){
 /* ================= 5. ДОДАТКОВІ МОДУЛІ ================= */
 /* ============ Повноекранний режим ============ */
 // Показує елемент (.fsw) на весь екран; якщо браузер не дозволяє — розтягує його на весь блок сторінки.
-//function toggleFs(w){
-//  if (!w) return;
-//  if (w.classList.contains("fs") || document.fullscreenElement === w) { if (document.fullscreenElement) document.exitFullscreen(); w.classList.remove("fs"); }
-//  else {
- //   const rf = w.requestFullscreen || w.webkitRequestFullscreen, soft = () => w.classList.add("fs");
- //   try { const pr = rf ? rf.call(w) : null; if (pr && pr.catch) pr.catch(soft); else if (!rf) soft(); } catch (e) { soft(); }
-//  }
-//  setTimeout(() => window.dispatchEvent(new Event("resize")), 150);
-//}
+function toggleFs(w){
+  if (!w) return;
+  if (w.classList.contains("fs") || document.fullscreenElement === w) { if (document.fullscreenElement) document.exitFullscreen(); w.classList.remove("fs"); }
+  else {
+    const rf = w.requestFullscreen || w.webkitRequestFullscreen, soft = () => w.classList.add("fs");
+    try { const pr = rf ? rf.call(w) : null; if (pr && pr.catch) pr.catch(soft); else if (!rf) soft(); } catch (e) { soft(); }
+  }
+  setTimeout(() => window.dispatchEvent(new Event("resize")), 150);
+}
 
 /* ============ Кнопки картки викладача й вікно папки ============ */
 let CURB = [];
@@ -519,17 +536,56 @@ async function loadSettings(){
 }
 // Застосовує кольори, шрифти й банер до сторінки.
 function applySettings(o){
-  const root = $("kfvs"), map = {"колір меню": "--vd", "колір тексту меню": "--beam", "колір акценту": "--amber", "колір заголовків і кнопок": "--v", "колір фону": "--bg", "колір тексту": "--ink", "колір тексту банера": "--bc"};
+  const root = $("kfvs"), map = {"колір меню": "--vd", "колір тексту меню": "--beam", "колір акценту": "--amber", "колір заголовків і кнопок": "--v", "колір фону": "--bg", "колір тексту": "--ink", "колір тексту банера": "--bc", "колір панелі меню": "--panel", "колір карток": "--card"};
   for (const k in map) if (o[k] && okColor(o[k])) root.style.setProperty(map[k], o[k]);
   if (o["шрифт заголовків"] && okFont(o["шрифт заголовків"])) root.style.setProperty("--fh", `'${o["шрифт заголовків"]}'`);
   if (o["шрифт тексту"] && okFont(o["шрифт тексту"])) root.style.setProperty("--fb", `'${o["шрифт тексту"]}'`);
   if (FULL_PAGE && o["назва сайту"]) document.title = o["назва сайту"];
+  // Ширина вмісту й бічні полоси (колір або зображення за межами вмісту)
+  const W = parseInt(o["ширина сайту"], 10); root.style.maxWidth = W >= 500 && W <= 2400 ? W + "px" : ""; root.style.margin = "0 auto";
+  const sc = o["колір бічних полос"], si = o["зображення бічних полос"], bs = document.body.style;
+  bs.backgroundColor = sc && okColor(sc) ? sc : ""; document.documentElement.style.backgroundColor = bs.backgroundColor;
+  const su = si ? imgUrl(si, 2000) : ""; if (su) { bs.backgroundImage = 'url("' + su.replace(/"/g, "%22") + '")'; bs.backgroundSize = "cover"; bs.backgroundAttachment = "fixed"; }
+  // Зображення на фоні вмісту з напівпрозорим шаром кольору фону
+  const bu = o["зображення фону"] ? imgUrl(o["зображення фону"], 2000) : "";
+  if (bu) { const n = parseInt(o["фон прозорість"], 10), a = (isNaN(n) ? 60 : Math.min(100, Math.max(0, n))) / 100, c = bgRgb(getComputedStyle(root).getPropertyValue("--bg")); root.style.backgroundImage = `linear-gradient(rgba(${c},${a}),rgba(${c},${a})),url("${bu.replace(/"/g, "%22")}")`; root.style.backgroundSize = "cover"; }
   const b = $("banner"), show = FULL_PAGE || /^(так|yes|1)$/i.test(o["показувати банер"] || "");
-  if (!show || !(o["банер зображення"] || o["банер заголовок"])) { b.hidden = true; return; }
-  const h = parseInt(o["банер висота"], 10), img = o["банер зображення"] ? imgUrl(o["банер зображення"], 2400) : "";
+  const vid = o["банер відео"], gif = o["банер gif"];
+  if (!show || !(o["банер зображення"] || o["банер заголовок"] || vid || gif)) { b.hidden = true; return; }
+  const h = parseInt(o["банер висота"], 10), still = o["банер зображення"] ? imgUrl(o["банер зображення"], 2400) : "";
+  const gifUrl = gif ? (/drive\.google/.test(gif) && driveId(gif) ? `https://drive.google.com/uc?export=view&id=${driveId(gif)}` : safeUrl(gif)) : "";
   b.hidden = false; b.style.height = (h >= 100 && h <= 700 ? h : 260) + "px";
-  if (img) b.style.backgroundImage = 'url("' + img.replace(/"/g, "%22") + '")';
+  const pic = gifUrl || still; if (pic) b.style.backgroundImage = 'url("' + pic.replace(/"/g, "%22") + '")';
   $("bt1").textContent = o["банер заголовок"] || ""; $("bt2").textContent = o["банер підзаголовок"] || "";
+  // Відео на банері: без звуку, по колу, під напівпрозорою «плівкою»
+  const still_only = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
+  if (vid && !still_only) mountBannerVideo(b, vid);
+  const fc = o["банер плівка колір"], fa = parseInt(o["банер плівка прозорість"], 10), alpha = isNaN(fa) ? (vid ? 40 : 0) : Math.min(100, Math.max(0, fa));
+  $("bfilm").style.background = alpha ? `rgba(${bgRgb(fc && okColor(fc) ? fc : "#3A0F1A")},${alpha / 100})` : "";
+}
+// Перетворює колір #RGB / #RRGGBB на «r,g,b» (для напівпрозорих шарів).
+function bgRgb(s){
+  s = String(s || "").trim(); let m = s.match(/^#([0-9a-f]{6})$/i);
+  if (m) { const n = parseInt(m[1], 16); return [n >> 16, (n >> 8) & 255, n & 255].join(","); }
+  m = s.match(/^#([0-9a-f])([0-9a-f])([0-9a-f])$/i);
+  return m ? m.slice(1).map(x => parseInt(x + x, 16)).join(",") : "246,243,238";
+}
+// Вставляє фонове відео в банер: YouTube (рекомендовано) або пряме посилання на .mp4/.webm.
+function mountBannerVideo(b, u){
+  const box = $("bmedia"), yt = String(u).match(/(?:youtu\.be\/|v=|embed\/|shorts\/)([\w-]{11})/);
+  box.innerHTML = "";
+  if (yt) {
+    const f = document.createElement("iframe");
+    f.src = `https://www.youtube.com/embed/${yt[1]}?autoplay=1&mute=1&controls=0&loop=1&playlist=${yt[1]}&playsinline=1&modestbranding=1&rel=0&disablekb=1&iv_load_policy=3`;
+    f.allow = "autoplay *; encrypted-media *"; f.tabIndex = -1; f.setAttribute("aria-hidden", "true"); f.title = "Відео-фон";
+    box.appendChild(f);
+    const fit = () => { const k = Math.max(b.clientWidth / 16, b.clientHeight / 9); f.style.width = 16 * k + "px"; f.style.height = 9 * k + "px"; };
+    fit(); window.addEventListener("resize", fit);
+  } else if (/\.(mp4|webm|ogv)(\?|$)/i.test(u) || !/^https?:/i.test(u)) {
+    const v = document.createElement("video");
+    v.src = u; v.muted = true; v.loop = true; v.autoplay = true; v.playsInline = true; v.setAttribute("aria-hidden", "true");
+    box.appendChild(v); const pl = v.play(); if (pl && pl.catch) pl.catch(() => {});
+  }
 }
 
 // Доповнює сторінку після відображення: панорами, галереї папок, картки-посилання.
@@ -566,11 +622,17 @@ function block(r){
   const tn = t.replace(/['’ʼ`\-_\s]/g, "");
   if (tn === "посилання" || tn === "превю") { const lu = safeUrl(r["Посилання"] || (txtUrl ? r["Текст"] : "")); return lu ? linkCard(r, lu) : ""; }
   if (tn === "панорама") { const u = safeUrl(raw); if (!u) return ""; const id = /drive\.google/.test(u) && driveId(u); return title + `<div class="pano fsw" data-src="${esc(id ? `https://lh3.googleusercontent.com/d/${id}=w4096` : u)}"><p class="phint">Завантаження панорами…</p></div><small class="pcap">Перетягніть фото, щоб оглянути приміщення з усіх боків.</small>${txtUrl || !r["Текст"] ? "" : `<div class="pdesc">${paras(r["Текст"])}</div>`}`; }
+  if (tn === "карта") {
+    const cm = [r["Посилання"], r["Текст"]].map(s => String(s || "").match(/@?(-?\d{1,3}\.\d+)\s*[,;]\s*(-?\d{1,3}\.\d+)/)).find(Boolean); if (!cm) return "";
+    const [lat, lon] = [cm[1], cm[2]], plain = /^\s*@?-?\d{1,3}\.\d+\s*[,;]\s*-?\d{1,3}\.\d+\s*$/.test(r["Текст"] || "");
+    const ios = /iPhone|iPad|iPod/.test(navigator.userAgent);
+    return title + `<a class="map" href="https://www.google.com/maps/dir/?api=1&destination=${lat},${lon}" target="_blank" rel="noopener" aria-label="Відкрити маршрут"><iframe src="https://www.google.com/maps?q=${lat},${lon}&z=15&output=embed" loading="lazy" tabindex="-1" title="Карта"></iframe><span class="mapb">Побудувати маршрут</span></a>${r["Текст"] && !plain ? paras(r["Текст"]) : ""}${ios ? `<a class="btn" href="https://maps.apple.com/?daddr=${lat},${lon}" target="_blank" rel="noopener">Відкрити в Apple Картах</a>` : ""}`;
+  }
   if (tn === "допісля") { const [a, b] = (r["Зображення"] || "").split(/[\s;]+/).filter(Boolean).map(u => imgUrl(u)); if (!a || !b) return ""; return title + `<div class="ba fsw"${photoStyle(r)}><img src="${esc(b)}" referrerpolicy="no-referrer" alt="Після"><img class="baa" src="${esc(a)}" referrerpolicy="no-referrer" alt="До"><input class="bar" type="range" min="0" max="100" value="50" aria-label="Порівняння до і після"><span class="bah">↔</span><span class="bal">До</span><span class="bal r">Після</span><button type="button" class="fsb" data-fs aria-label="На весь екран">⛶</button></div>`; }
   if (tn === "галерея") { const id = driveId(raw); if (!id) return ""; return title + (DRIVE_API_KEY ? `<div class="gal" data-folder="${esc(id)}"><p>Завантаження…</p></div>` : `<iframe class="gridf" src="https://drive.google.com/embeddedfolderview?id=${esc(id)}#grid" loading="lazy" title="${esc(r["Заголовок"])}"></iframe>`); }
   if (t === "текст") return `<div class="blk${blockStyle(r).includes("color:")?" own":""}"${blockStyle(r)}>` + (r["Заголовок"] ? `<h2>${fmt(r["Заголовок"])}</h2>` : "") + paras(r["Текст"]) + (la ? `<a class="btn" ${la}>Докладніше</a>` : "") + `</div>`;
   if (t === "файл") return `<a class="file" ${linkAttrs(raw)}>${esc(r["Заголовок"])}${r["Текст"] && !txtUrl ? `<small>${esc(r["Текст"])}</small>` : ""}</a>`;
-  if (t === "відео" || t === "вбудова"){const u = embedUrl(raw); return u ? title + `<div class="fsw"><iframe class="${/facebook\.com\/plugins/.test(u)?"fb":t==="відео"?"video":""}" src="${esc(u)}" loading="lazy" allowfullscreen allow="fullscreen" title="${esc(r["Заголовок"])}"></iframe><button type="button" class="fsb" data-fs aria-label="На весь екран" title="На весь екран">⛶</button></div>` : ""}
+  if (t === "відео" || t === "вбудова"){const u = embedUrl(raw); return u ? title + `<iframe class="${/facebook\.com\/plugins/.test(u)?"fb":t==="відео"?"video":""}" src="${esc(u)}" loading="lazy" allowfullscreen allow="fullscreen *; autoplay *; encrypted-media *" title="${esc(r["Заголовок"])}"></iframe>` : ""}
   if (t === "фото") return title + `<img class="photo"${photoStyle(r)} referrerpolicy="no-referrer" src="${esc(imgUrl(r["Зображення"] || raw))}" alt="${esc(r["Заголовок"])}">`;
   return "";
 }
