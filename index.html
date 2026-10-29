@@ -1,0 +1,673 @@
+<!doctype html>
+<html lang="uk">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Циклова комісія кіно-, фото- та відеосправи</title>
+<style>html,body{margin:0}</style>
+</head>
+<body>
+<!--
+  САЙТ ЦИКЛОВОЇ КОМІСІЇ (бета 1.0)
+  Весь вміст сайту береться з Google Таблиці; сам файл змінювати не потрібно, крім кількох налаштувань нижче.
+
+  УСТАНОВКА: у Google Sites — Вставити → Вбудувати → Код вбудовування; або завантажте як index.html на власний хостинг (тоді FULL_PAGE = true).
+
+  СТРУКТУРА ФАЙЛА
+    1. блок style     — оформлення (меню, картки, вікна, галереї, панорама, мобільна версія)
+    2. HTML-каркас    — банер, меню, ліва панель, вміст, вікна (профіль, папка, перегляд фото)
+    3. блок script:
+       1) НАЛАШТУВАННЯ     — SHEET_URL, DRIVE_API_KEY, SETTINGS_URL, FULL_PAGE
+       2) ДЕМО-ДАНІ         — приклад вмісту, поки таблицю не підключено
+       3) ДОПОМІЖНІ ФУНКЦІЇ — розбір CSV, посилання, дати, текст
+       4) БЛОКИ СТОРІНКИ    — як кожен тип рядка (текст, картка, відео…) перетворюється на HTML
+       5) ДОДАТКОВІ МОДУЛІ  — панорама 360°, галереї, вікно викладача, повний екран, налаштування вигляду
+       6) НАВІГАЦІЯ І ПОДІЇ — розділи, меню, кліки, клавіатура
+       7) ЗАПУСК            — завантаження таблиці й побудова сторінки
+-->
+<style>
+@import url("https://fonts.googleapis.com/css2?family=Unbounded:wght@700&family=Golos+Text:wght@400;600&display=swap");
+.kfvs{--v:#3a0f1a;--vd:#1c070d;--beam:#ffe9b0;--amber:#f2a93b;--bg:#f6f3ee;--ink:#1d1416;--mute:#6a5b5f;--line:#e3dcd2;font:16px/1.55 var(--fb,"Golos Text"),system-ui,sans-serif;color:var(--ink);background:var(--bg);min-height:100vh}
+.kfvs *{box-sizing:border-box}
+.kfvs button{font:inherit;cursor:pointer}
+.kfvs :focus-visible{outline:3px solid var(--amber);outline-offset:2px}
+/* ---- Верхнє меню ---- */
+.kfvs nav.top{position:sticky;top:0;z-index:5;display:flex;flex-wrap:wrap;gap:4px;padding:8px 12px;background:var(--vd)}
+.kfvs nav.top button{border:0;background:transparent;color:var(--beam);padding:10px 16px;border-radius:8px;font-weight:600}
+.kfvs nav.top button:hover{background:rgba(255,233,176,.12)}
+.kfvs nav.top button[aria-current=true]{background:var(--amber);color:var(--vd)}
+/* ---- Каркас: ліва панель + вміст ---- */
+.kfvs .layout{display:grid;grid-template-columns:250px 1fr;min-height:70vh}
+.kfvs .layout.solo{grid-template-columns:1fr}
+.kfvs aside{background:#fff;border-right:1px solid var(--line);padding:20px 12px}
+.kfvs aside h3{margin:0 0 10px 12px;font-size:14px;color:var(--mute);font-weight:600}
+.kfvs aside button{display:block;width:100%;text-align:left;border:0;background:transparent;padding:10px 12px;border-left:4px solid transparent;border-radius:0 8px 8px 0;color:var(--ink)}
+.kfvs aside button:hover{background:#f3ece3}
+.kfvs aside button[aria-current=true]{border-left-color:var(--amber);background:#fbf1de;font-weight:600}
+.kfvs main{padding:28px clamp(16px,4vw,44px) 48px;max-width:980px}
+/* ---- Заголовки й текст ---- */
+.kfvs h1{margin:0 0 20px;font:700 clamp(24px,3.4vw,38px)/1.1 var(--fh,Unbounded),"Arial Black",sans-serif;color:var(--v)}
+.kfvs h2{margin:28px 0 8px;font-size:1.3em;color:var(--v)}
+.kfvs .blk{max-width:70ch}
+.kfvs .blk.own h2{color:inherit}
+.kfvs a{color:var(--v)}
+.kfvs p{margin:0 0 10px}
+/* ---- Картки ---- */
+.kfvs .cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:16px;margin:16px 0}
+.kfvs .card{display:block;background:#fff;border:1px solid var(--line);border-radius:12px;overflow:hidden;color:inherit;text-decoration:none}
+.kfvs a.card{cursor:pointer}
+.kfvs a.card:hover{border-color:var(--amber);box-shadow:0 4px 14px rgba(58,15,26,.12)}
+.kfvs .card img{display:block;width:100%;aspect-ratio:4/3;object-fit:cover;background:#eee}
+.kfvs .card div{padding:14px 16px}
+.kfvs .card b{display:block;color:var(--v);margin-bottom:4px}
+.kfvs .card span{font-size:14px;color:var(--mute)}
+/* ---- Кнопки й файли ---- */
+.kfvs .file,.kfvs .btn{display:block;margin:8px 0;padding:12px 16px;background:#fff;border:1px solid var(--line);border-left:5px solid var(--amber);border-radius:8px;color:var(--ink);text-decoration:none;font-weight:600}
+.kfvs .btn{display:inline-block;background:var(--v);color:var(--beam);border:0;border-radius:8px;margin-top:4px}
+.kfvs .file:hover{background:#fbf1de}
+.kfvs .file small{display:block;font-weight:400;color:var(--mute)}
+/* ---- Вбудовані відео й сторінки ---- */
+.kfvs iframe{display:block;width:100%;height:480px;border:0;border-radius:12px;background:#fff;margin:8px 0}
+.kfvs iframe.video{height:auto;aspect-ratio:16/9}
+.kfvs iframe.fb{height:720px;max-width:520px}
+.kfvs .photo{display:block;max-width:100%;max-height:80vh;width:auto;height:auto;border-radius:12px;margin:8px 0}
+/* ---- Картка-прев’ю посилання ---- */
+.kfvs .lp{display:block;max-width:560px;margin:14px 0;background:#fff;border:1px solid var(--line);border-radius:12px;overflow:hidden;color:inherit;text-decoration:none}
+.kfvs .lp:hover{border-color:var(--amber);box-shadow:0 4px 14px rgba(58,15,26,.12)}
+.kfvs .lpi{display:flex;gap:2px;height:170px;background:#eee}
+.kfvs .lpi[hidden]{display:none}
+.kfvs .lpi img{flex:1 1 0;min-width:0;height:100%;object-fit:cover}
+.kfvs .lpb{padding:14px 16px}
+.kfvs .lpt{display:block;color:var(--v)}
+.kfvs .lpd{display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;margin-top:4px;font-size:14px}
+.kfvs .lph{display:block;margin-top:8px;color:var(--mute);font-size:12px}
+.kfvs .card[data-go],.kfvs .btn[data-go]{cursor:pointer}
+.kfvs .card[data-go]:hover{border-color:var(--amber);box-shadow:0 4px 14px rgba(58,15,26,.12)}
+/* ---- Галереї та переглядач фото ---- */
+.kfvs .gal{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px;margin:10px 0}
+.kfvs .gal button{border:0;padding:0;aspect-ratio:1;background:#e9e3da;border-radius:8px;overflow:hidden;cursor:pointer}
+.kfvs .gal img{display:block;width:100%;height:100%;object-fit:cover}
+.kfvs iframe.gridf{height:520px}
+#lb{position:fixed;inset:0;z-index:50;background:rgba(0,0,0,.9);display:flex;align-items:center;justify-content:center}
+#lb[hidden]{display:none}
+#lb img{max-width:88%;max-height:90%;object-fit:contain}
+#lb button{position:absolute;border:0;background:rgba(255,255,255,.15);color:#fff;font-size:34px;width:52px;height:52px;border-radius:50%;cursor:pointer}
+#lbp{left:12px}#lbn{right:12px}#lbx{top:12px;right:12px}
+.kfvs .ver{padding:6px 16px;font-size:11px;color:#9a8d90;text-align:right}
+/* ---- Вікно картки викладача ---- */
+#pm{position:fixed;inset:0;z-index:40;background:rgba(20,8,10,.6);display:flex;align-items:flex-start;justify-content:center;padding:16px;overflow:auto}
+#pm[hidden]{display:none}
+.kfvs .pmp{position:relative;width:100%;max-width:860px;margin:auto 0;background:var(--bg);border-radius:14px;padding:24px}
+#pmx{position:absolute;top:10px;right:12px;width:36px;height:36px;border:0;border-radius:50%;background:#fff;font-size:22px;cursor:pointer}
+.kfvs .pmh{display:grid;grid-template-columns:minmax(0,240px) 1fr;gap:24px;align-items:start}
+.kfvs .pmh>img{width:100%;aspect-ratio:3/4;object-fit:cover;object-position:center top;border-radius:12px;background:#e9e3da}
+.kfvs .pmh h2{margin-top:0}
+.kfvs .pmr{color:var(--mute);font-weight:600}
+.kfvs .pmp h3{margin:24px 0 8px;color:var(--v)}
+.kfvs .pmg button{aspect-ratio:4/3;background:#fff;border:1px solid var(--line)}
+.kfvs .pmg img{object-fit:contain}
+.kfvs .card[data-p]{cursor:pointer}
+.kfvs .card[data-p]:hover{border-color:var(--amber);box-shadow:0 4px 14px rgba(58,15,26,.12)}
+.kfvs .card[data-p] img{aspect-ratio:1/1;object-position:center top}
+.kfvs .more{display:block;margin-top:8px;color:var(--v);font-weight:600}
+@media(max-width:700px){.kfvs .pmh{grid-template-columns:1fr}.kfvs .pmh>img{max-width:260px}}
+/* ---- Панорама 360° ---- */
+.kfvs .pano{position:relative;margin:8px 0;border-radius:12px;overflow:hidden;background:#15090c;min-height:120px}
+.kfvs .pcv{display:block;width:100%;cursor:grab;touch-action:none}
+.kfvs .pcv:active{cursor:grabbing}
+.kfvs .pz{position:absolute;right:10px;bottom:10px;display:flex;gap:6px}
+.kfvs .pz button{width:36px;height:36px;border:0;border-radius:8px;background:rgba(255,255,255,.88);font-size:20px;cursor:pointer}
+.kfvs .phint{margin:0;padding:16px;color:#e6dccd}
+.kfvs .pcap{display:block;color:var(--mute);margin-bottom:10px}
+/* ---- Банер (налаштовується в аркуші «Налаштування») ---- */
+#banner{position:relative;display:flex;align-items:flex-end;background:var(--vd) center/cover no-repeat;color:var(--bc,#fff)}
+#banner[hidden]{display:none}
+#banner::before{content:"";position:absolute;inset:0;background:linear-gradient(transparent 25%,rgba(0,0,0,.55))}
+#banner .bt{position:relative;padding:20px clamp(16px,4vw,44px)}
+#banner b{display:block;font:700 clamp(22px,4vw,44px)/1.1 var(--fh,Unbounded),sans-serif}
+#banner span{display:block;margin-top:6px;font-size:clamp(14px,1.6vw,20px)}
+/* ---- Кнопка «на весь екран» і повноекранний режим ---- */
+.kfvs .fsw{position:relative}
+.kfvs .fsb{position:absolute;top:8px;right:8px;z-index:3;width:36px;height:36px;border:0;border-radius:8px;background:rgba(0,0,0,.55);color:#fff;font-size:18px;cursor:pointer}
+.kfvs .fsw.fs,.kfvs .fsw:fullscreen{background:#000;border-radius:0}
+.kfvs .fsw.fs{position:fixed;inset:0;z-index:60;margin:0;display:flex;align-items:center;justify-content:center}
+.kfvs .fsw.fs iframe,.kfvs .fsw:fullscreen iframe{width:100%;height:100%;max-width:none;aspect-ratio:auto;border-radius:0}
+.kfvs img.photo{cursor:zoom-in}
+/* ---- Порівняння «до / після» ---- */
+.kfvs .ba{position:relative;overflow:hidden;margin:10px 0;border-radius:12px;line-height:0;user-select:none;--p:50%}
+.kfvs .ba img{display:block;width:100%;height:auto;max-height:80vh;object-fit:cover}
+.kfvs .ba .baa{position:absolute;inset:0;height:100%;clip-path:inset(0 calc(100% - var(--p)) 0 0)}
+.kfvs .ba .bar{position:absolute;inset:0;width:100%;height:100%;margin:0;opacity:0;cursor:ew-resize}
+.kfvs .ba::after{content:"";position:absolute;top:0;bottom:0;left:var(--p);width:3px;margin-left:-1.5px;background:#fff;box-shadow:0 0 6px rgba(0,0,0,.5);pointer-events:none}
+.kfvs .bah{position:absolute;top:50%;left:var(--p);z-index:2;width:38px;height:38px;margin:-19px 0 0 -19px;border-radius:50%;background:#fff;color:#333;font-size:18px;line-height:38px;text-align:center;box-shadow:0 1px 6px rgba(0,0,0,.5);pointer-events:none}
+.kfvs .bal{position:absolute;bottom:10px;left:10px;padding:3px 10px;border-radius:6px;background:rgba(0,0,0,.55);color:#fff;font-size:13px;line-height:1.5;pointer-events:none}
+.kfvs .bal.r{left:auto;right:10px}
+.kfvs .ba.fs{display:block}
+.kfvs .ba.fs img{position:absolute;inset:0;height:100%;max-height:none;object-fit:contain}
+/* ---- Кнопки в картці викладача та вікно папки ---- */
+.kfvs .pbtns{display:flex;flex-wrap:wrap;gap:8px;margin:16px 0}
+.kfvs .pbtns .btn{margin:0;border:0;font:inherit;font-weight:600;cursor:pointer}
+#fm{position:fixed;inset:0;z-index:45;background:rgba(20,8,10,.6);display:flex;align-items:flex-start;justify-content:center;padding:16px;overflow:auto}
+#fm[hidden]{display:none}
+#fmx{position:absolute;top:10px;right:12px;width:36px;height:36px;border:0;border-radius:50%;background:#fff;font-size:22px;cursor:pointer}
+.kfvs .ft{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px}
+.kfvs .fi{padding:0;border:1px solid var(--line);border-radius:10px;background:#fff;overflow:hidden;text-align:left;cursor:pointer}
+.kfvs .fi:hover{border-color:var(--amber)}
+.kfvs .fi img{display:block;width:100%;aspect-ratio:3/4;object-fit:cover;object-position:top;background:#eee}
+.kfvs .fi span{display:block;padding:8px 10px;font-size:13px;line-height:1.3;overflow-wrap:anywhere}
+.kfvs .pdesc{margin-top:6px}
+.kfvs p{overflow-wrap:anywhere}
+.kfvs .note{margin:0;padding:8px 16px;background:#fbf1de;color:var(--v);font-size:14px}
+@media(max-width:760px){.kfvs .layout{grid-template-columns:1fr}.kfvs aside{display:flex;gap:6px;overflow-x:auto;padding:10px;border-right:0;border-bottom:1px solid var(--line)}.kfvs aside h3{display:none}.kfvs aside button{width:auto;white-space:nowrap;border:1px solid var(--line);border-radius:999px}.kfvs aside button[aria-current=true]{border-color:var(--amber)}}
+/* ---- Мобільна версія ---- */
+@media(max-width:760px){
+  .kfvs nav.top{flex-wrap:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch;padding:6px 8px}
+  .kfvs nav.top button{flex:0 0 auto;padding:10px 12px;font-size:15px}
+  .kfvs main{padding:18px 14px 36px}
+  .kfvs h1{font-size:24px}
+  .kfvs .cards{grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
+  .kfvs iframe{height:380px}.kfvs iframe.video{height:auto}.kfvs iframe.fb{max-width:100%}
+  .kfvs .lp{max-width:100%}
+  #pm,#fm{padding:0}.kfvs .pmp{min-height:100%;border-radius:0;padding:16px 14px}
+  #lb button{width:44px;height:44px}
+}
+</style>
+
+<div class="kfvs" id="kfvs">
+  <div class="note" id="note" hidden></div>
+  <header id="banner" hidden><div class="bt"><b id="bt1"></b><span id="bt2"></span></div></header>
+  <nav class="top" id="top" aria-label="Розділи сайту"></nav>
+  <div class="layout" id="layout"><aside id="side" aria-label="Підрозділи"></aside><main id="main"><p>Завантаження… Якщо цей напис не зникає, у цьому режимі не виконуються скрипти.</p></main></div>
+  <div id="fm" hidden><div class="pmp" role="dialog" aria-modal="true"><button id="fmx" aria-label="Закрити">×</button><h3 id="fmt"></h3><div id="fmc"></div></div></div>
+  <div id="pm" hidden><div class="pmp" role="dialog" aria-modal="true"><button id="pmx" aria-label="Закрити">×</button><div id="pmc"></div></div></div>
+  <div id="lb" hidden><button id="lbp" aria-label="Попереднє">‹</button><img id="lbimg" alt=""><button id="lbn" aria-label="Наступне">›</button><button id="lbx" aria-label="Закрити">×</button></div>
+  <div class="ver">бета 1.0</div>
+</div>
+
+<script>
+/* ================= 1. НАЛАШТУВАННЯ ================= */
+// 1) Посилання на опубліковану CSV-таблицю (інструкція в чаті). Поки порожнє, показується демо-вміст.
+const SHEET_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQb8uuiVdBzc-WNsl-n8B_PnvH-5YgRne_yHxQzwJeMtEy6K_BxNgv5Onza9BVE-WFTYuSQsuN-xBv7/pub?gid=1403709242&single=true&output=csv";
+
+// 1б) Ключ Google Drive API для галерей із папок (необов’язково; інструкція в чаті). Без ключа папка показується вбудованою сіткою Диска.
+const DRIVE_API_KEY = "AIzaSyBrupiflflOlGoPWYDmO9n_0DToTe-sR4s";
+
+// 1в) Посилання на опубліковану CSV-версію аркуша «Налаштування» (кольори, шрифти, банер). Необов’язково.
+const SETTINGS_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQb8uuiVdBzc-WNsl-n8B_PnvH-5YgRne_yHxQzwJeMtEy6K_BxNgv5Onza9BVE-WFTYuSQsuN-xBv7/pub?gid=1758252892&single=true&output=csv";
+
+// 1г) true — повна сторінка на власному хостингу (index.html), false — вбудова в Google Sites.
+const FULL_PAGE = true;
+
+/* ================= 2. ДЕМО-ДАНІ (показуються, поки не підключено таблицю) ================= */
+const DEMO = `Розділ,Підрозділ,Тип,Заголовок,Текст,Посилання,Зображення,Показувати,Колір,Розмір,Ширина,Шрифт,Вирівнювання,Докладно,Грамоти,Діє з,Діє до,Кнопки
+Головна,,текст,"Циклова комісія кіно-, фото- та відеосправи","Ми готуємо фахівців, які вміють розповідати історії зображенням і звуком: від ідеї та сценарію до зйомки, монтажу й показу готового фільму.
+На цьому сайті вступники знайдуть інформацію про навчання, студенти — матеріали й розклад, а партнери — приклади робіт і контакти для співпраці.",,,так,,,,,,,,,,
+Головна,,картка,Вступникам,"Дізнайтеся, чого ми навчаємо, як вступити та що чекає на студента.",#Вступникам,,так,,,,,,,,,,
+Головна,,картка,Студентам,"Розклад, навчальні матеріали, завдання та заявки на техніку.",#Студентам,,так,,,,,,,,,,
+Головна,,картка,Оголошення,"Актуальні новини, терміни та важливі повідомлення.",#Оголошення,,так,,,,,,,,,,
+Головна,,картка,Партнерам,"Співпраця, практика студентів, історії випускників.",#Партнерам,,так,,,,,,,,,,
+Головна,,текст,Чого ми навчаємо,"Кінорежисура та операторська майстерність.
+Фотографія: від портрета до репортажу.
+Відеопродакшн і монтаж.
+Звукорежисура та робота зі звуком у кіно.
+Комп’ютерна графіка й сучасні цифрові технології.",,,так,,,,,,,,,,
+Головна,,відео,Шоуріл комісії,,https://www.youtube.com/watch?v=ВСТАВТЕ_ID,,ні,,,,,,,,,,
+Про комісію,Хто ми,текст,Про комісію,"Циклова комісія об’єднує викладачів, які працюють у напрямах кіно, фотографії, відео та звуку. Ми поєднуємо теорію з практикою: студенти знімають, монтують і показують власні роботи вже під час навчання.
+Наша мета — виховати авторів і фахівців, затребуваних у кіно, на телебаченні, в рекламі та медіа.",,,так,,,,,,,,,,
+Про комісію,Викладачі,картка,Прізвище Ім’я По батькові,Викладач. Напрям: [кінорежисура]. Контакт: [e-mail],,,так,,,,,,"**Освіта:** [заклад, рік закінчення]
+**Стаж:** [кількість років]
+Коротко про досвід, предмети, проєкти й досягнення. Текст можна оформлювати так само, як в інших блоках: [колір=#b3261e]виділення[/колір], [посилання](https://example.com).",,,,
+Про комісію,Викладачі,картка,Прізвище Ім’я По батькові,Викладач. Напрям: [фотографія]. Контакт: [e-mail],,,так,,,,,,,,,,
+Про комісію,Викладачі,картка,Прізвище Ім’я По батькові,Викладач. Напрям: [звук і монтаж]. Контакт: [e-mail],,,так,,,,,,,,,,
+Про комісію,Матеріальна база,текст,Студії та техніка,"Для навчання ми використовуємо навчальну студію, кабінет-лабораторію звукозапису, комп’ютерні класи для монтажу та графіки, а також камери, світло й аудіообладнання.
+Детальний перелік техніки та правила її використання розміщено в розділі «Студентам».",,,так,,,,,,,,,,
+Про комісію,Віртуальний тур,текст,Наші аудиторії та студії,Оглянути приміщення можна у форматі 360° або в відеотурі. Приклади розмітки приховані (колонка «Показувати» = ні).,,,так,,,,,,,,,,
+Про комісію,Віртуальний тур,панорама,Студія звукозапису,,,https://drive.google.com/file/d/ВСТАВТЕ_ID/view,ні,,,,,,,,,,
+Про комісію,Віртуальний тур,відео,Відеотур,,https://www.youtube.com/watch?v=ВСТАВТЕ_ID,,ні,,,,,,,,,,
+Про комісію,Документи,файл,План роботи комісії,Навчальний рік [20__–20__],https://drive.google.com/,,так,,,,,,,,,,
+Про комісію,Документи,файл,Освітні програми,Програми та навчальні плани,https://drive.google.com/,,так,,,,,,,,,,
+Вступникам,Спеціальності,текст,Чого ми навчаємо,"Студенти опановують повний шлях створення аудіовізуального твору: сценарій, режисуру, зйомку, світло, звук, монтаж і постпродакшн.
+Перелік спеціальностей, освітніх програм і форм навчання (денна, заочна) уточнюйте у приймальній комісії закладу.",,,так,,,,,,,,,,
+Вступникам,Правила вступу,текст,Як вступити,"Правила вступу щороку оновлюються. Актуальні терміни, перелік документів і вимоги до вступних випробувань публікує приймальна комісія.
+Якщо маєте запитання, напишіть або зателефонуйте нам — розділ «Контакти».",,,так,,,,,,,,,,
+Вступникам,Правила вступу,файл,Правила прийому,Офіційний документ,https://drive.google.com/,,так,,,,,,,,,,
+Вступникам,Питання й відповіді,текст,Чи потрібна власна техніка?,"Ні. Базова техніка для навчання є в закладі, її можна взяти за заявкою. Власне обладнання стане в пригоді, але не є обов’язковим.",,,так,,,,,,,,,,
+Вступникам,Питання й відповіді,текст,Де можна працювати після навчання?,"Випускники працюють на телебаченні, у студіях відеопродакшну, рекламі, медіа, на фестивалях і як незалежні автори.",,,так,,,,,,,,,,
+Вступникам,Питання й відповіді,текст,Чи будуть студентські роботи показувати?,Так. Найкращі роботи показуємо в Кінозалі КФВС і надсилаємо на конкурси та фестивалі.,,,так,,,,,,,,,,
+Студентам,Розклад,текст,Розклад занять,"Актуальний розклад розміщено нижче. Якщо він не відкривається, зверніться до старости групи чи куратора.",,,так,,,,,,,,,,
+Студентам,Розклад,вбудова,Розклад,,https://drive.google.com/,,ні,,,,,,,,,,
+Студентам,Матеріали,текст,Навчальні матеріали,"Конспекти лекцій, презентації та методичні вказівки до практичних робіт розміщено за дисциплінами.",,,так,,,,,,,,,,
+Студентам,Матеріали,файл,Матеріали за дисциплінами,Папка на Google Диску,https://drive.google.com/,,так,,,,,,,,,,
+Студентам,Практичні й кваліфікаційні роботи,текст,Роботи та захисти,"Вимоги до оформлення, терміни подання й графік захистів публікуються тут. Перед здачею перевіряйте актуальну версію вимог.",,,так,,,,,,,,,,
+Студентам,Заявка на техніку,текст,Як взяти техніку,"Подайте заявку не пізніше ніж за два дні до зйомки. Вкажіть дату, обладнання та відповідального за повернення.",,,так,,,,,,,,,,
+Студентам,Заявка на техніку,вбудова,Форма заявки,,https://forms.google.com/,,ні,,,,,,,,,,
+Оголошення,,текст,Приклад чинного оголошення,"Оголошення показується до дати, указаної в колонці «Діє до». Дату записуйте так: 31.12.2027.",,,так,,,,,,,,,31.12.2027,
+Оголошення,,текст,Приклад застарілого оголошення,"Це оголошення вже неактуальне, тому на сайті воно не відображається.",,,так,,,,,,,,,01.09.2026,
+Портфоліо,Кіно,текст,Студентські фільми,"Короткометражні ігрові, документальні та навчальні роботи студентів. Додавайте відео рядками з типом «відео».",,,так,,,,,,,,,,
+Портфоліо,Фото,текст,Фоторобіти,"Серії, портрети, репортажі й експерименти студентів. Додавайте зображення рядками з типом «фото».",,,так,,,,,,,,,,
+Портфоліо,Відео,текст,Відео та кліпи,"Рекламні, музичні та навчальні відеопроєкти.",,,так,,,,,,,,,,
+Портфоліо,Звук,текст,Звукові роботи,"Саунддизайн, запис і зведення, музичне оформлення фільмів.",,,так,,,,,,,,,,
+Новини,,текст,Новини комісії,"Тут публікуємо новини про фестивалі, майстер-класи, зйомки й нагороди.
+Приклад оформлення: **жирний**, *курсив*, [колір=#b3261e]червоний текст[/колір], [розмір=28]великий[/розмір], [шрифт=Georgia]інший шрифт[/шрифт], [посилання](https://example.com).",,,так,,,,,,,,,,
+Новини,,посилання,,,https://www.facebook.com/,,ні,,,,,,,,,,
+Партнерам,Співпраця,текст,Співпраця,"Ми відкриті до спільних проєктів: зйомок, показів, майстер-класів, практики студентів і замовлень на аудіовізуальні матеріали.
+Напишіть нам, і ми обговоримо формат співпраці.",,,так,,,,,,,,,,
+Партнерам,Випускники,текст,Наші випускники,"Історії випускників, їхні роботи та місця, де вони працюють сьогодні.",,,так,,,,,,,,,,
+Партнерам,Практика,текст,Практика студентів,"Студенти проходять практику в студіях, на телебаченні, у медіа та рекламних агенціях. Якщо ви можете прийняти практикантів, зв’яжіться з нами.",,,так,,,,,,,,,,
+Портфоліо,Фото,до-після,Ретуш: до і після,"Перше фото — до обробки, друге — після. Посилання на обидва через пробіл.",,https://drive.google.com/file/d/ВСТАВТЕ_ID_1/view https://drive.google.com/file/d/ВСТАВТЕ_ID_2/view,ні,,,400,,,,,,,
+Контакти,,текст,Контакти,"Адреса: [адреса закладу]
+Голова комісії: [Прізвище Ім’я По батькові]
+Телефон: [номер]
+E-mail: [адреса]",,,так,,,,,,,,,,
+`;
+
+/* ================= 3. ДОПОМІЖНІ ФУНКЦІЇ ================= */
+// Скорочення: знайти елемент за id.
+const $ = id => document.getElementById(id);
+// Порівнянний вигляд тексту: малі літери, без апострофів і зайвих пробілів.
+const norm = s => String(s || "").toLowerCase().replace(/['’ʼ`]/g, "").replace(/\s+/g, " ").trim();
+// Усі колонки таблиці, які розуміє сайт.
+const COLS = ["Розділ","Підрозділ","Тип","Заголовок","Текст","Посилання","Зображення","Показувати","Колір","Розмір","Ширина","Шрифт","Вирівнювання","Докладно","Грамоти","Діє з","Діє до","Кнопки"];
+// Підбирає правильну назву колонки (регістр і пробіли неважливі).
+const canon = x => COLS.find(c => norm(c) === norm(x)) || String(x).trim();
+// Показує жовту смугу з повідомленням угорі сторінки.
+function warn(m){ const n = $("note"); n.hidden = false; n.textContent = m; if (n.dataset) n.dataset.nav = "1"; }
+// Екранує спецсимволи, щоб текст із таблиці не міг зламати сторінку.
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+// Дістає ID файла чи папки з посилання Google Диска.
+const driveId = u => (u.match(/\/(?:d|folders)\/([\w-]{15,})/) || u.match(/[?&]id=([\w-]{15,})/) || [])[1];
+
+// Розпізнає дату у форматах ДД.ММ.РРРР та РРРР-ММ-ДД.
+function parseDate(s){
+  s = String(s || "").trim(); let m, d = null;
+  if ((m = s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/))) d = new Date(+m[1], +m[2] - 1, +m[3]), m = [0, m[3], m[2], m[1]];
+  else if ((m = s.match(/^(\d{1,2})[./](\d{1,2})[./](\d{4}|\d{2})(?!\d)/))) { let y = +m[3]; if (y < 100) y += 2000; d = new Date(y, +m[2] - 1, +m[1]); m = [0, m[1], m[2], y]; }
+  return d && d.getDate() === +m[1] && d.getMonth() === +m[2] - 1 ? d : null;
+}
+// Чи показується рядок сьогодні (колонки «Діє з» і «Діє до»).
+function active(r){
+  const t = new Date(); t.setHours(0, 0, 0, 0);
+  const a = parseDate(r["Діє з"]), b = parseDate(r["Діє до"]);
+  return !(a && t < a) && !(b && t > b);
+}
+// Розбирає CSV-текст на рядки й комірки (лапки, переноси рядків).
+function parseCSV(t){const r=[];let row=[],f="",q=false;for(let i=0;i<t.length;i++){const c=t[i];if(q){if(c==='"'){if(t[i+1]==='"'){f+='"';i++}else q=false}else f+=c}else if(c==='"')q=true;else if(c===","){row.push(f);f=""}else if(c==="\n"||c==="\r"){if(c==="\r"&&t[i+1]==="\n")i++;row.push(f);r.push(row);row=[];f=""}else f+=c}if(f||row.length){row.push(f);r.push(row)}return r}
+
+// Пропускає лише посилання http(s) і внутрішні #розділи.
+function safeUrl(u){u=(u||"").trim();return /^(https?:\/\/|#)/i.test(u)?u:""}
+// Атрибути посилання: зовнішнє (нова вкладка) або внутрішнє (перехід у розділ).
+function linkAttrs(u){u=String(u||"").trim();if(!u)return"";
+  if(/^https?:\/\//i.test(u))return`href="${esc(u)}" target="_blank" rel="noopener"`;
+  const t=u.replace(/^#/,"").trim();
+  if(t&&(u[0]==="#"||[...S.keys()].some(k=>norm(k)===norm(t.split("/")[0]))))return`data-go="${esc(t)}" role="link" tabindex="0"`;
+  return""}
+// Пряма адреса картинки; для Диска — потрібної ширини.
+function imgUrl(u,w=1600){u=safeUrl(u);const id=/drive\.google/.test(u)&&driveId(u);return id?`https://lh3.googleusercontent.com/d/${id}=w${w}`:u}
+// Запасні адреси фото з Диска, якщо основна не завантажилась.
+const driveAlts = id => [`https://drive.google.com/thumbnail?id=${id}&sz=w1600`, `https://drive.google.com/uc?export=view&id=${id}`];
+// Посилання (YouTube, Диск, Facebook, Документи) → адреса для вбудовування.
+function embedUrl(u){const ifr=String(u||"").match(/<iframe[^>]+src="([^"]+)"/i);if(ifr)u=ifr[1].replace(/&amp;/g,"&");u=safeUrl(u);let m;
+  if(/^https:\/\/www\.facebook\.com\/plugins\//i.test(u))return u;
+  if((m=u.match(/(?:youtu\.be\/|v=|embed\/)([\w-]{11})/)))return`https://www.youtube.com/embed/${m[1]}`;
+  if(/drive\.google\.com\/drive\/folders\//.test(u))return`https://drive.google.com/embeddedfolderview?id=${driveId(u)}#list`;
+  if(/drive\.google\.com\/file\//.test(u))return`https://drive.google.com/file/d/${driveId(u)}/preview`;
+  if((m=u.match(/docs\.google\.com\/(document|spreadsheets)\/d\/([\w-]+)/)))return`https://docs.google.com/${m[1]}/d/${m[2]}/preview`;
+  if((m=u.match(/docs\.google\.com\/presentation\/d\/([\w-]+)/)))return`https://docs.google.com/presentation/d/${m[1]}/embed`;
+  if(/(facebook\.com|fb\.com|fb\.watch)/i.test(u)){const vid=/\/(videos?|reel|watch)\b|fb\.watch/i.test(u),post=/\/(posts|photos?|permalink|story\.php|share)\b|[?&]story_fbid=/i.test(u)||vid;
+    return post?`https://www.facebook.com/plugins/${vid?"video":"post"}.php?href=${encodeURIComponent(u)}&show_text=true&width=500`:`https://www.facebook.com/plugins/page.php?href=${encodeURIComponent(u)}&tabs=timeline&width=500&height=700&small_header=true`}
+  return u.startsWith("http")?u:""}
+// Дозволені шрифти та перевірка кольору й шрифту.
+const FONTS = ["Unbounded","Golos Text","Georgia","Times New Roman","Arial","Verdana","Courier New","serif","sans-serif","monospace"];
+const okColor = c => /^(#[0-9a-f]{3,8}|[a-z]{3,20})$/i.test(c);
+const okFont = f => FONTS.some(x => x.toLowerCase() === f.trim().toLowerCase());
+// Розмітка в тексті: **жирний**, *курсив*, [колір=…], [розмір=…], [шрифт=…], [підпис](адреса).
+function fmt(s){
+  let t = esc(s);
+  t = t.replace(/\*\*(.+?)\*\*/g, "<b>$1</b>").replace(/\*(.+?)\*/g, "<i>$1</i>");
+  t = t.replace(/\[колір=([^\]]+)\]([\s\S]*?)\[\/колір\]/g, (m,c,x) => okColor(c.trim()) ? `<span style="color:${c.trim()}">${x}</span>` : x);
+  t = t.replace(/\[розмір=(\d{1,2})\]([\s\S]*?)\[\/розмір\]/g, (m,n,x) => n>=10 && n<=80 ? `<span style="font-size:${n}px">${x}</span>` : x);
+  t = t.replace(/\[шрифт=([^\]]+)\]([\s\S]*?)\[\/шрифт\]/g, (m,f,x) => okFont(f) ? `<span style="font-family:'${f.trim()}',sans-serif">${x}</span>` : x);
+  t = t.replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>');
+  return t;
+}
+// Розбиває текст на абзаци.
+const paras = t => fmt(t).split(/\n+/).filter(Boolean).map(p=>`<p>${p}</p>`).join("");
+// Стиль текстового блоку (колір, розмір, шрифт, вирівнювання).
+function blockStyle(r){
+  const s = [];
+  const c = (r["Колір"]||"").trim(), n = (r["Розмір"]||"").trim(), f = (r["Шрифт"]||"").trim(), a = (r["Вирівнювання"]||"").trim().toLowerCase();
+  if (c && okColor(c)) s.push(`color:${c}`);
+  if (/^\d{1,2}$/.test(n) && n >= 10 && n <= 80) s.push(`font-size:${n}px`);
+  if (f && okFont(f)) s.push(`font-family:'${f}',sans-serif`);
+  const al = {"ліворуч":"left","по центру":"center","праворуч":"right","за шириною":"justify"}[a];
+  if (al) s.push(`text-align:${al}`);
+  if (al === "center") s.push("margin-inline:auto");
+  if (al === "right") s.push("margin-left:auto");
+  return s.length ? ` style="${s.join(";")}"` : "";
+}
+
+/* ================= 6. НАВІГАЦІЯ І ПОДІЇ ================= */
+let S = new Map(), cur = {sec:"", sub:""};
+
+// Будує структуру розділів/підрозділів із рядків таблиці (з урахуванням дат і «Показувати»).
+function build(csv){
+  const rows = parseCSV(csv).filter(r => r.some(c => c.trim()));
+  const h = rows.shift().map(canon);
+  S = new Map(); const ph = new Set();
+  rows.forEach(a => {
+    const r = {}; h.forEach((k,i) => r[k] = (a[i] ?? "").trim());
+    if (!r["Розділ"] || /^(ні|no|0)$/i.test(r["Показувати"])) return;
+    if (!active(r)) { if (!S.has(r["Розділ"])) { S.set(r["Розділ"], new Map([["", [Object.assign(Object.fromEntries(COLS.map(c => [c, ""])), {"Тип": "текст", "Текст": "Наразі актуальних матеріалів немає."})]]])); ph.add(r["Розділ"]); } return; }
+    if (ph.has(r["Розділ"])) { S.get(r["Розділ"]).clear(); ph.delete(r["Розділ"]); }
+    if (!S.has(r["Розділ"])) S.set(r["Розділ"], new Map());
+    const m = S.get(r["Розділ"]), k = r["Підрозділ"];
+    if (!m.has(k)) m.set(k, []);
+    m.get(k).push(r);
+  });
+  go([...S.keys()][0]);
+}
+
+// Відкриває розділ (і підрозділ) за назвою; показує підказку, якщо розділу немає.
+function go(sec, sub){
+  let s = String(sec || "");
+  if (sub === undefined && s.includes("/")) [s, sub] = s.split("/");
+  const key = [...S.keys()].find(k => norm(k) === norm(s));
+  if (!key) { warn("Розділ «" + s.trim() + "» не знайдено. Перевірте посилання в таблиці: воно має збігатися з назвою розділу."); return; }
+  const n = $("note"); if (n.dataset && n.dataset.nav) { n.hidden = true; delete n.dataset.nav; }
+  cur.sec = key;
+  const subs = [...S.get(key).keys()], pick = subs.find(k => norm(k) === norm(sub));
+  cur.sub = pick !== undefined ? pick : subs[0];
+  draw();
+  $("kfvs").scrollIntoView({block:"start"});
+}
+
+// Розмір і вирівнювання фото (колонки «Ширина»/«Розмір», «Вирівнювання»).
+function photoStyle(r){
+  const m = (r["Ширина"] || r["Розмір"] || "").trim().toLowerCase().match(/^(\d{1,4})\s*(%|px)?$/), a = (r["Вирівнювання"] || "").trim().toLowerCase(), s = [];
+  if (m) { const n = +m[1]; if (m[2] === "%") { if (n >= 5 && n <= 100) s.push(`max-width:${n}%`); } else if (n >= 20 && n <= 1600) s.push(`max-width:min(100%,${n}px)`); }
+  if (a === "по центру") s.push("margin-inline:auto");
+  if (a === "праворуч") s.push("margin-left:auto");
+  return s.length ? ` style="${s.join(";")}"` : "";
+}
+// Прев’ю зовнішніх посилань (сервіс Microlink): запит і підстановка в картку.
+const LP = new Map();
+const preview = u => { if (!LP.has(u)) LP.set(u, fetch("https://api.microlink.io/?url=" + encodeURIComponent(u)).then(r => r.json()).then(j => j.status === "success" ? j.data : null).catch(() => null)); return LP.get(u); };
+// Галереї: елемент (мініатюра + велике фото), заповнення сітки, список фото папки.
+const galItem = id => ({t: `https://lh3.googleusercontent.com/d/${id}=w400`, f: `https://lh3.googleusercontent.com/d/${id}=w1800`});
+function fillGal(el, items){
+  el._urls = items.map(x => x.f);
+  el.innerHTML = items.map((x, i) => `<button type="button" data-i="${i}" aria-label="Фото ${i+1}"><img src="${esc(x.t)}" referrerpolicy="no-referrer" loading="lazy" alt=""></button>`).join("") || "<p>Немає фото.</p>";
+}
+async function listFolder(id){
+  const q = `'${id}' in parents and mimeType contains 'image/' and trashed=false`;
+  const r = await fetch(`https://www.googleapis.com/drive/v3/files?q=${encodeURIComponent(q)}&fields=files(id)&orderBy=name&pageSize=200&key=${DRIVE_API_KEY}`), j = await r.json();
+  if (!j.files) throw new Error((j.error && j.error.message) || "порожня відповідь");
+  return j.files.map(f => f.id);
+}
+// Вікно картки викладача: фото, опис, кнопки та галерея грамот.
+async function openProfile(i){
+  const r = PROF[i]; if (!r) return;
+  const btns = parseButtons(r["Кнопки"]); CURB = btns;
+  const img = imgUrl(r["Зображення"]), toks = (r["Грамоти"] || "").split(/[\s;]+/).filter(u => /^https?:\/\//i.test(u));
+  $("pmc").innerHTML = `<div class="pmh">${img ? `<img src="${esc(img)}" referrerpolicy="no-referrer" alt="">` : ""}<div><h2>${fmt(r["Заголовок"])}</h2>${r["Текст"] ? `<p class="pmr">${fmt(r["Текст"]).replace(/\n+/g, "<br>")}</p>` : ""}${paras(r["Докладно"])}${btns.length ? `<div class="pbtns">${btns.map((b, i) => `<button type="button" class="btn pb" data-pb="${i}">${esc(b.name)}</button>`).join("")}</div>` : ""}</div></div>${toks.length ? `<h3>Грамоти, нагороди та сертифікати</h3><div class="gal pmg"></div><div class="pmf"></div>` : ""}`;
+  $("pm").hidden = false;
+  if (!toks.length) return;
+  const items = [], extra = [];
+  for (const u of toks) {
+    const id = driveId(u);
+    if (/\/folders\//.test(u)) { if (DRIVE_API_KEY && id) { try { (await listFolder(id)).forEach(x => items.push(galItem(x))); } catch (e) { extra.push(u); } } else extra.push(u); }
+    else if (/drive\.google\.com/.test(u) && id) items.push(galItem(id));
+    else items.push({t: u, f: u});
+  }
+  const g = $("pmc").querySelector(".pmg"), f = $("pmc").querySelector(".pmf");
+  if (g) { fillGal(g, items); if (!items.length) g.hidden = true; }
+  if (f) f.innerHTML = extra.map(u => `<a class="btn" href="${esc(u)}" target="_blank" rel="noopener">Відкрити папку з нагородами</a>`).join("");
+}
+// Панорама 360°: шейдери (WebGL), завантаження зображення й керування оглядом.
+const PVS = "attribute vec2 p;varying vec2 v;void main(){v=p;gl_Position=vec4(p,0.,1.);}";
+const PFS = "precision mediump float;varying vec2 v;uniform sampler2D t;uniform vec2 a;uniform float f;uniform float r;void main(){vec3 d=normalize(vec3(v.x*r*f,v.y*f,-1.));float cp=cos(a.y),sp=sin(a.y);d=vec3(d.x,d.y*cp-d.z*sp,d.y*sp+d.z*cp);float cy=cos(a.x),sy=sin(a.x);d=vec3(d.x*cy+d.z*sy,d.y,-d.x*sy+d.z*cy);gl_FragColor=texture2D(t,vec2(atan(d.x,-d.z)/6.2831853+.5,.5-asin(clamp(d.y,-1.,1.))/3.1415926));}";
+function initPano(el){
+  const src = el.dataset.src, img = new Image(); img.crossOrigin = "anonymous"; img.referrerPolicy = "no-referrer";
+  const fail = () => { el.innerHTML = `<img class="photo" src="${esc(src)}" referrerpolicy="no-referrer" alt=""><p class="phint">360°-перегляд недоступний для цього файла, показано звичайне фото.</p>`; };
+  img.onerror = fail;
+  img.onload = () => { try { startPano(el, img); } catch (e) { fail(); } };
+  img.src = src;
+}
+function startPano(el, img){
+  const cv = document.createElement("canvas"); cv.className = "pcv";
+  const gl = cv.getContext("webgl"); if (!gl) throw new Error("webgl");
+  const sh = (t, s) => { const o = gl.createShader(t); gl.shaderSource(o, s); gl.compileShader(o); if (!gl.getShaderParameter(o, gl.COMPILE_STATUS)) throw new Error("shader"); return o; };
+  const pr = gl.createProgram(); gl.attachShader(pr, sh(gl.VERTEX_SHADER, PVS)); gl.attachShader(pr, sh(gl.FRAGMENT_SHADER, PFS)); gl.linkProgram(pr); gl.useProgram(pr);
+  gl.bindBuffer(gl.ARRAY_BUFFER, gl.createBuffer()); gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1,-1,1,-1,-1,1,1,1]), gl.STATIC_DRAW);
+  const loc = gl.getAttribLocation(pr, "p"); gl.enableVertexAttribArray(loc); gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
+  const M = gl.getParameter(gl.MAX_TEXTURE_SIZE); let tex = img;
+  if (img.width > M) { tex = document.createElement("canvas"); tex.width = M; tex.height = Math.round(img.height * M / img.width); tex.getContext("2d").drawImage(img, 0, 0, tex.width, tex.height); }
+  gl.bindTexture(gl.TEXTURE_2D, gl.createTexture());
+  gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, tex);
+  [[gl.TEXTURE_MIN_FILTER, gl.LINEAR], [gl.TEXTURE_MAG_FILTER, gl.LINEAR], [gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE], [gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE]].forEach(x => gl.texParameteri(gl.TEXTURE_2D, x[0], x[1]));
+  const uA = gl.getUniformLocation(pr, "a"), uF = gl.getUniformLocation(pr, "f"), uR = gl.getUniformLocation(pr, "r");
+  el.innerHTML = ""; el.appendChild(cv);
+  el.insertAdjacentHTML("beforeend", '<div class="pz"><button type="button" aria-label="Наблизити">+</button><button type="button" aria-label="Віддалити">−</button><button type="button" data-fs aria-label="На весь екран">⛶</button></div>');
+  let yaw = 0, pitch = 0, fov = 80, auto = !(window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches), drag = false, lx = 0, ly = 0;
+  const draw = () => {
+    const full = el.classList.contains("fs") || document.fullscreenElement === el, w = Math.max(200, el.clientWidth), hh = full ? Math.max(200, el.clientHeight) : Math.min(480, Math.max(260, Math.round(w * .56))), dpr = Math.min(2, window.devicePixelRatio || 1);
+    cv.style.height = hh + "px"; cv.width = Math.round(w * dpr); cv.height = Math.round(hh * dpr); gl.viewport(0, 0, cv.width, cv.height);
+    gl.uniform2f(uA, yaw, pitch); gl.uniform1f(uF, Math.tan(fov * Math.PI / 360)); gl.uniform1f(uR, w / hh); gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+  };
+  const spin = () => { if (!auto) return; yaw += .0025; draw(); requestAnimationFrame(spin); };
+  const zoom = d => { fov = Math.max(35, Math.min(100, fov + d)); draw(); };
+  cv.addEventListener("pointerdown", e => { drag = true; auto = false; lx = e.clientX; ly = e.clientY; cv.setPointerCapture(e.pointerId); });
+  cv.addEventListener("pointermove", e => { if (!drag) return; const k = fov * Math.PI / 180 / cv.clientHeight; yaw += (e.clientX - lx) * k; pitch = Math.max(-1.45, Math.min(1.45, pitch + (e.clientY - ly) * k)); lx = e.clientX; ly = e.clientY; draw(); });
+  cv.addEventListener("pointerup", () => { drag = false; });
+  const bs = el.querySelectorAll(".pz button"); bs[0].onclick = () => { auto = false; zoom(-10); }; bs[1].onclick = () => { auto = false; zoom(10); };
+  window.addEventListener("resize", draw);
+  draw(); if (auto) requestAnimationFrame(spin);
+}
+/* ================= 5. ДОДАТКОВІ МОДУЛІ ================= */
+/* ============ Повноекранний режим ============ */
+// Показує елемент (.fsw) на весь екран; якщо браузер не дозволяє — розтягує його на весь блок сторінки.
+function toggleFs(w){
+  if (!w) return;
+  if (w.classList.contains("fs") || document.fullscreenElement === w) { if (document.fullscreenElement) document.exitFullscreen(); w.classList.remove("fs"); }
+  else {
+    const rf = w.requestFullscreen || w.webkitRequestFullscreen, soft = () => w.classList.add("fs");
+    try { const pr = rf ? rf.call(w) : null; if (pr && pr.catch) pr.catch(soft); else if (!rf) soft(); } catch (e) { soft(); }
+  }
+  setTimeout(() => window.dispatchEvent(new Event("resize")), 150);
+}
+
+/* ============ Кнопки картки викладача й вікно папки ============ */
+let CURB = [];
+// Колонка «Кнопки»: кожен рядок має вигляд «Назва | посилання».
+function parseButtons(s){
+  return String(s || "").split(/\n+/).map(l => l.trim()).filter(Boolean).map(l => { const i = l.indexOf("|"); return {name: i > 0 ? l.slice(0, i).trim() : "Відкрити", url: (i > 0 ? l.slice(i + 1) : l).trim()}; }).filter(b => /^https?:\/\//i.test(b.url));
+}
+// Читає файли (не підпапки) з папки Диска разом з типом і посиланням на перегляд.
+async function listFiles(id){
+  const q = `'${id}' in parents and trashed=false and mimeType != 'application/vnd.google-apps.folder'`;
+  const r = await fetch(`https://www.googleapis.com/drive/v3/files?q=${encodeURIComponent(q)}&fields=files(id,name,mimeType,webViewLink)&orderBy=name&pageSize=200&key=${DRIVE_API_KEY}`), j = await r.json();
+  if (!j.files) throw new Error((j.error && j.error.message) || "порожня відповідь");
+  return j.files;
+}
+// Відкриває кнопку: папка Диска — у вікні з мініатюрами; будь-яке інше посилання — у новій вкладці.
+async function openFolder(b){
+  if (!b) return;
+  const id = driveId(b.url);
+  if (!/\/folders\//.test(b.url) || !id) { window.open(b.url, "_blank", "noopener"); return; }
+  $("fmt").textContent = b.name; $("fmc").innerHTML = "<p>Завантаження…</p>"; $("fm").hidden = false;
+  if (!DRIVE_API_KEY) { $("fmc").innerHTML = `<iframe class="gridf" src="https://drive.google.com/embeddedfolderview?id=${esc(id)}#grid" title="${esc(b.name)}"></iframe>`; return; }
+  try {
+    const files = await listFiles(id), box = $("fmc"); box._files = files;
+    box.innerHTML = files.length ? `<div class="ft">${files.map((f, i) => { const im = f.mimeType.startsWith("image/"); return `<button type="button" class="fi" data-f="${i}"><img data-nofb="1" src="${im ? `https://lh3.googleusercontent.com/d/${esc(f.id)}=w400` : `https://drive.google.com/thumbnail?id=${esc(f.id)}&sz=w400`}" referrerpolicy="no-referrer" loading="lazy" alt=""><span>${esc(f.name)}</span></button>`; }).join("")}</div>` : "<p>У папці немає файлів.</p>";
+  } catch (e) { $("fmc").innerHTML = `<p>Не вдалося завантажити папку (${esc(e.message)}).</p><a class="btn" href="${esc(b.url)}" target="_blank" rel="noopener">Відкрити папку на Диску</a>`; }
+}
+// Клік по мініатюрі: фото — у великому переглядачі, документ — на Диску в новій вкладці.
+function openFile(i){
+  const files = $("fmc")._files || [], f = files[i]; if (!f) return;
+  if (f.mimeType.startsWith("image/")) {
+    const imgs = files.filter(x => x.mimeType.startsWith("image/"));
+    lb = {urls: imgs.map(x => `https://lh3.googleusercontent.com/d/${x.id}=w1800`), i: imgs.indexOf(f)}; $("lb").hidden = false; lbShow();
+  } else window.open(f.webViewLink || `https://drive.google.com/file/d/${f.id}/view`, "_blank", "noopener");
+}
+
+/* ============ Налаштування вигляду (кольори, шрифти, банер) ============ */
+// Читає аркуш «Налаштування» (колонки: Параметр, Значення) як {параметр: значення}.
+async function loadSettings(){
+  if (!SETTINGS_URL) return {};
+  try { const t = await (await fetch(SETTINGS_URL, {cache: "no-store"})).text(), o = {}; parseCSV(t).slice(1).forEach(a => { if (a[0]) o[norm(a[0])] = (a[1] || "").trim(); }); return o; }
+  catch (e) { return {}; }
+}
+// Застосовує кольори, шрифти й банер до сторінки.
+function applySettings(o){
+  const root = $("kfvs"), map = {"колір меню": "--vd", "колір тексту меню": "--beam", "колір акценту": "--amber", "колір заголовків і кнопок": "--v", "колір фону": "--bg", "колір тексту": "--ink", "колір тексту банера": "--bc"};
+  for (const k in map) if (o[k] && okColor(o[k])) root.style.setProperty(map[k], o[k]);
+  if (o["шрифт заголовків"] && okFont(o["шрифт заголовків"])) root.style.setProperty("--fh", `'${o["шрифт заголовків"]}'`);
+  if (o["шрифт тексту"] && okFont(o["шрифт тексту"])) root.style.setProperty("--fb", `'${o["шрифт тексту"]}'`);
+  if (FULL_PAGE && o["назва сайту"]) document.title = o["назва сайту"];
+  const b = $("banner"), show = FULL_PAGE || /^(так|yes|1)$/i.test(o["показувати банер"] || "");
+  if (!show || !(o["банер зображення"] || o["банер заголовок"])) { b.hidden = true; return; }
+  const h = parseInt(o["банер висота"], 10), img = o["банер зображення"] ? imgUrl(o["банер зображення"], 2400) : "";
+  b.hidden = false; b.style.height = (h >= 100 && h <= 700 ? h : 260) + "px";
+  if (img) b.style.backgroundImage = 'url("' + img.replace(/"/g, "%22") + '")';
+  $("bt1").textContent = o["банер заголовок"] || ""; $("bt2").textContent = o["банер підзаголовок"] || "";
+}
+
+// Доповнює сторінку після відображення: панорами, галереї папок, картки-посилання.
+function hydrate(){
+  const m = $("main"); if (!m.querySelectorAll) return;
+  m.querySelectorAll(".pano[data-src]").forEach(initPano);
+  m.querySelectorAll(".gal[data-folder]").forEach(async el => {
+    try { fillGal(el, (await listFolder(el.dataset.folder)).map(galItem)); }
+    catch (e) { el.innerHTML = `<p>Не вдалося завантажити папку (${esc(e.message)}). Перевірте, що папка відкрита за посиланням і ключ API діє.</p>`; }
+  });
+  m.querySelectorAll(".lp[data-url]").forEach(async el => {
+    const t = el.querySelector(".lpt"), d = el.querySelector(".lpd"), box = el.querySelector(".lpi");
+    const info = await preview(el.dataset.url);
+    const bad = !info || /^(facebook|log in|увійти|вхід)/i.test((info.title || "").trim());
+    if (!bad) {
+      if (!t.textContent && info.title) t.textContent = info.title;
+      if (!d.textContent && info.description) d.textContent = info.description;
+      const img = info.image && safeUrl(info.image.url);
+      if (box.hidden && img) { const i = document.createElement("img"); i.src = img; i.alt = ""; i.referrerPolicy = "no-referrer"; box.appendChild(i); box.hidden = false; }
+    }
+    if (!t.textContent) t.textContent = "Відкрити публікацію";
+  });
+}
+// Картка-прев’ю для зовнішнього посилання (тип «посилання»).
+function linkCard(r, lu){
+  const imgs = (r["Зображення"] || "").split(/[\s;]+/).filter(Boolean).slice(0, 4).map(imgUrl).filter(Boolean);
+  let host = ""; try { host = new URL(lu).hostname.replace(/^www\./, ""); } catch (e) {}
+  const desc = /^https?:\/\/\S+$/i.test(r["Текст"]) ? "" : r["Текст"];
+  return `<a class="lp" ${linkAttrs(lu)} data-url="${esc(lu)}"><div class="lpi"${imgs.length ? "" : " hidden"}>${imgs.map(s => `<img src="${esc(s)}" referrerpolicy="no-referrer" loading="lazy" alt="">`).join("")}</div><div class="lpb"><b class="lpt">${esc(r["Заголовок"])}</b><span class="lpd">${esc(desc)}</span><small class="lph">${esc(host)}</small></div></a>`;
+}
+/* ================= 4. БЛОКИ СТОРІНКИ (рядок таблиці → HTML) ================= */
+function block(r){
+  const t = r["Тип"].toLowerCase(), title = r["Заголовок"] ? `<h2>${esc(r["Заголовок"])}</h2>` : "", la = linkAttrs(r["Посилання"]), txtUrl = /^https?:\/\/\S+$/i.test(r["Текст"]), raw = r["Посилання"] || r["Зображення"] || (txtUrl ? r["Текст"] : "");
+  const tn = t.replace(/['’ʼ`\-_\s]/g, "");
+  if (tn === "посилання" || tn === "превю") { const lu = safeUrl(r["Посилання"] || (txtUrl ? r["Текст"] : "")); return lu ? linkCard(r, lu) : ""; }
+  if (tn === "панорама") { const u = safeUrl(raw); if (!u) return ""; const id = /drive\.google/.test(u) && driveId(u); return title + `<div class="pano fsw" data-src="${esc(id ? `https://lh3.googleusercontent.com/d/${id}=w4096` : u)}"><p class="phint">Завантаження панорами…</p></div><small class="pcap">Перетягніть фото, щоб оглянути приміщення з усіх боків.</small>${txtUrl || !r["Текст"] ? "" : `<div class="pdesc">${paras(r["Текст"])}</div>`}`; }
+  if (tn === "допісля") { const [a, b] = (r["Зображення"] || "").split(/[\s;]+/).filter(Boolean).map(u => imgUrl(u)); if (!a || !b) return ""; return title + `<div class="ba fsw"${photoStyle(r)}><img src="${esc(b)}" referrerpolicy="no-referrer" alt="Після"><img class="baa" src="${esc(a)}" referrerpolicy="no-referrer" alt="До"><input class="bar" type="range" min="0" max="100" value="50" aria-label="Порівняння до і після"><span class="bah">↔</span><span class="bal">До</span><span class="bal r">Після</span><button type="button" class="fsb" data-fs aria-label="На весь екран">⛶</button></div>`; }
+  if (tn === "галерея") { const id = driveId(raw); if (!id) return ""; return title + (DRIVE_API_KEY ? `<div class="gal" data-folder="${esc(id)}"><p>Завантаження…</p></div>` : `<iframe class="gridf" src="https://drive.google.com/embeddedfolderview?id=${esc(id)}#grid" loading="lazy" title="${esc(r["Заголовок"])}"></iframe>`); }
+  if (t === "текст") return `<div class="blk${blockStyle(r).includes("color:")?" own":""}"${blockStyle(r)}>` + (r["Заголовок"] ? `<h2>${fmt(r["Заголовок"])}</h2>` : "") + paras(r["Текст"]) + (la ? `<a class="btn" ${la}>Докладніше</a>` : "") + `</div>`;
+  if (t === "файл") return `<a class="file" ${linkAttrs(raw)}>${esc(r["Заголовок"])}${r["Текст"] && !txtUrl ? `<small>${esc(r["Текст"])}</small>` : ""}</a>`;
+  if (t === "відео" || t === "вбудова"){const u = embedUrl(raw); return u ? title + `<div class="fsw"><iframe class="${/facebook\.com\/plugins/.test(u)?"fb":t==="відео"?"video":""}" src="${esc(u)}" loading="lazy" allowfullscreen allow="fullscreen" title="${esc(r["Заголовок"])}"></iframe><button type="button" class="fsb" data-fs aria-label="На весь екран" title="На весь екран">⛶</button></div>` : ""}
+  if (t === "фото") return title + `<img class="photo"${photoStyle(r)} referrerpolicy="no-referrer" src="${esc(imgUrl(r["Зображення"] || raw))}" alt="${esc(r["Заголовок"])}">`;
+  return "";
+}
+// Картки викладачів: збереження даних і малювання картки.
+let PROF = [];
+function card(r){
+  const hasP = !!((r["Докладно"] || "").trim() || (r["Грамоти"] || "").trim() || (r["Кнопки"] || "").trim());
+  const inTxt = !hasP && !r["Посилання"] && /^#\S/.test(r["Текст"]);
+  let la = hasP ? "" : linkAttrs(r["Посилання"] || (inTxt ? r["Текст"] : ""));
+  if (!la && !hasP) { const k = [...S.keys()].find(k => norm(k) === norm(r["Заголовок"])); if (k) la = `data-go="${esc(k)}" role="link" tabindex="0"`; }
+  let pa = ""; if (hasP) { PROF.push(r); pa = ` data-p="${PROF.length - 1}" role="button" tabindex="0"`; }
+  const img = imgUrl(r["Зображення"]), tag = la && !la.includes("data-go") ? "a" : "div";
+  const hint = la || hasP ? "" : ` data-hint="${esc("Картка «" + r["Заголовок"] + "» не пов’язана з розділом. У колонці «Посилання» зараз: «" + (r["Посилання"] || "") + "». Напишіть там #Назва розділу (як у колонці «Розділ»).")}"`;
+  return `<${tag} class="card" ${la}${pa}${hint}>${img?`<img src="${esc(img)}" referrerpolicy="no-referrer" alt="" loading="lazy">`:""}<div><b>${esc(r["Заголовок"])}</b><span>${inTxt ? "" : fmt(r["Текст"]).replace(/\n+/g, " ")}</span>${hasP ? '<small class="more">Докладніше</small>' : ""}</div></${tag}>`;
+}
+
+// Малює меню, ліву панель і блоки вибраного розділу.
+function draw(){
+  PROF = [];
+  const secs = S.get(cur.sec), subs = [...secs.keys()];
+  $("top").innerHTML = [...S.keys()].map(k => `<button data-sec="${esc(k)}" ${k===cur.sec?'aria-current="true"':""}>${esc(k)}</button>`).join("");
+  const showSide = subs.length > 1 || subs[0] !== "";
+  $("layout").className = "layout" + (showSide ? "" : " solo");
+  $("side").hidden = !showSide;
+  $("side").innerHTML = showSide ? `<h3>${esc(cur.sec)}</h3>` + subs.map(k => `<button data-sub="${esc(k)}" ${k===cur.sub?'aria-current="true"':""}>${esc(k || "Огляд")}</button>`).join("") : "";
+  let html = `<h1>${esc(cur.sub || cur.sec)}</h1>`, group = "";
+  const flush = () => { if (group) { html += `<div class="cards">${group}</div>`; group = ""; } };
+  secs.get(cur.sub).forEach(r => { if (r["Тип"].toLowerCase() === "картка") group += card(r); else { flush(); html += block(r); } });
+  flush();
+  $("main").innerHTML = html;
+  hydrate();
+}
+
+document.addEventListener("error", e => {
+  const el = e.target; if (!el || el.tagName !== "IMG") return;
+  if (el.dataset.nofb) { el.style.visibility = "hidden"; return; }
+  const m = el.src.match(/lh3\.googleusercontent\.com\/d\/([\w-]+)|[?&]id=([\w-]+)/), id = m && (m[1] || m[2]), step = +(el.dataset.step || 0);
+  if (id && step < 2) { el.dataset.step = step + 1; el.src = driveAlts(id)[step]; }
+  else if (el.classList.contains("photo")) { const p = document.createElement("p"); p.textContent = "Не вдалося завантажити фото. Перевірте, що файл відкрито для всіх, хто має посилання."; el.replaceWith(p); }
+}, true);
+
+let lb = {urls: [], i: 0};
+// Великий перегляд фото: показ, перемикання, закриття.
+const lbShow = () => { $("lbimg").src = lb.urls[lb.i]; };
+const lbMove = d => { lb.i = (lb.i + d + lb.urls.length) % lb.urls.length; lbShow(); };
+document.addEventListener("keydown", e => {
+  if (!$("lb").hidden) { if (e.key === "Escape") $("lb").hidden = true; if (e.key === "ArrowLeft") lbMove(-1); if (e.key === "ArrowRight") lbMove(1); return; }
+  if (e.key === "Escape") { const f = document.querySelector(".fsw.fs"); if (f) { f.classList.remove("fs"); return; } }
+  if (!$("fm").hidden && e.key === "Escape") { $("fm").hidden = true; return; }
+  if (!$("pm").hidden && e.key === "Escape") { $("pm").hidden = true; return; }
+  const t = e.target; if ((e.key === "Enter" || e.key === " ") && t && t.dataset && (t.dataset.go !== undefined || t.dataset.p !== undefined)) { e.preventDefault(); t.click(); }
+});
+document.addEventListener("input", e => { const t = e.target; if (t.classList && t.classList.contains("bar")) t.parentNode.style.setProperty("--p", t.value + "%"); });
+document.addEventListener("fullscreenchange", () => window.dispatchEvent(new Event("resize")));
+document.addEventListener("click", e => {
+  const fsb = e.target.closest("[data-fs]"); if (fsb) { toggleFs(fsb.closest(".fsw")); return; }
+  const pb = e.target.closest(".pb"); if (pb) { openFolder(CURB[+pb.dataset.pb]); return; }
+  const fi = e.target.closest(".fi"); if (fi) { openFile(+fi.dataset.f); return; }
+  if (e.target.id === "fmx" || e.target.id === "fm") { $("fm").hidden = true; return; }
+  const ph = e.target.closest("img.photo"); if (ph && !ph.closest(".gal")) { lb = {urls: [ph.src], i: 0}; $("lb").hidden = false; lbShow(); return; }
+  const g = e.target.closest(".gal button");
+  if (g) { lb = {urls: g.closest(".gal")._urls || [], i: +g.dataset.i}; $("lb").hidden = false; lbShow(); return; }
+  if (e.target.id === "pmx" || e.target.id === "pm") { $("pm").hidden = true; return; }
+  const pc = e.target.closest(".card[data-p]"); if (pc) { openProfile(+pc.dataset.p); return; }
+  if (e.target.id === "lbx" || e.target.id === "lb") { $("lb").hidden = true; return; }
+  if (e.target.id === "lbp") { lbMove(-1); return; }
+  if (e.target.id === "lbn") { lbMove(1); return; }
+  const hd = e.target.closest("[data-hint]"); if (hd) { warn(hd.dataset.hint); return; }
+  const el = e.target.closest("[data-sec],[data-sub],[data-go]");
+  if (!el) return;
+  if (el.dataset.sec) go(el.dataset.sec);
+  else if (el.dataset.sub !== undefined) go(cur.sec, el.dataset.sub);
+  else { e.preventDefault(); go(el.dataset.go); }
+});
+
+/* ================= 7. ЗАПУСК ================= */
+(async () => {
+  const note = m => { $("note").hidden = false; $("note").textContent = m; };
+  window.addEventListener("error", e => note("Помилка скрипта: " + e.message));
+  try {
+    applySettings(await loadSettings());
+    let csv = DEMO;
+    if (!SHEET_URL) note("Демо-режим: підключіть Google Таблицю (змінна SHEET_URL), щоб показати свій вміст.");
+    else {
+      $("main").innerHTML = "<p>Завантаження…</p>";
+      try {
+        const limit = new Promise((_, no) => setTimeout(() => no(new Error("час очікування вичерпано")), 10000));
+        const r = await Promise.race([fetch(SHEET_URL, {cache:"no-store"}), limit]);
+        if (!r.ok) throw new Error("статус " + r.status);
+        csv = await r.text();
+        if (/<html/i.test(csv.slice(0, 300))) throw new Error("отримано сторінку замість CSV");
+      } catch (e) { note("Не вдалося завантажити таблицю (" + e.message + "). Показано демо-вміст. Перевірте, що таблиця опублікована в Інтернеті у форматі CSV."); }
+    }
+    build(csv);
+  } catch (e) { note("Помилка: " + e.message); }
+})();
+</script>
+
+</body>
+</html>
