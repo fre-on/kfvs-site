@@ -8,7 +8,7 @@
 </head>
 <body>
 <!--
-  САЙТ ЦИКЛОВОЇ КОМІСІЇ (бета 1.1)
+  САЙТ ЦИКЛОВОЇ КОМІСІЇ (бета 1.2)
   Весь вміст сайту береться з Google Таблиці; сам файл змінювати не потрібно, крім кількох налаштувань нижче.
 
   УСТАНОВКА: у Google Sites — Вставити → Вбудувати → Код вбудовування; або завантажте як index.html на власний хостинг (тоді FULL_PAGE = true).
@@ -28,6 +28,7 @@
 <style>
 @import url("https://fonts.googleapis.com/css2?family=Unbounded:wght@700&family=Golos+Text:wght@400;600&display=swap");
 html,body{margin:0}
+body{box-sizing:border-box;padding-left:var(--sw,0px);padding-right:var(--sw,0px)}
 .kfvs{--v:#3a0f1a;--vd:#1c070d;--beam:#ffe9b0;--amber:#f2a93b;--bg:#f6f3ee;--ink:#1d1416;--mute:#6a5b5f;--line:#e3dcd2;font:16px/1.55 var(--fb,"Golos Text"),system-ui,sans-serif;color:var(--ink);background:var(--bg);min-height:100vh}
 .kfvs *{box-sizing:border-box}
 .kfvs button{font:inherit;cursor:pointer}
@@ -165,10 +166,17 @@ html,body{margin:0}
 .kfvs .map{position:relative;display:block;max-width:560px;height:240px;margin:8px 0;border:1px solid var(--line);border-radius:12px;overflow:hidden;color:inherit}
 .kfvs .map iframe{width:100%;height:100%;border:0;pointer-events:none}
 .kfvs .mapb{position:absolute;left:10px;bottom:10px;padding:6px 12px;border-radius:8px;background:var(--v);color:#fff;font-size:14px;font-weight:600}
+/* ---- Підкладка під сайтом (зображення + відтінок), видна з боків і крізь прозорий фон ---- */
+.kfvs{position:relative;z-index:1}
+#backdrop{position:fixed;inset:0;z-index:0;overflow:hidden;pointer-events:none}
+#backdrop[hidden]{display:none}
+#bdimg,#bdtint{position:absolute;inset:0}
+#bdimg{background:center/cover no-repeat}
 .kfvs .note{margin:0;padding:8px 16px;background:#fbf1de;color:var(--v);font-size:14px}
 @media(max-width:760px){.kfvs .layout{grid-template-columns:1fr}.kfvs aside{display:flex;gap:6px;overflow-x:auto;padding:10px;border-right:0;border-bottom:1px solid var(--line)}.kfvs aside h3{display:none}.kfvs aside button{width:auto;white-space:nowrap;border:1px solid var(--line);border-radius:999px}.kfvs aside button[aria-current=true]{border-color:var(--amber)}}
 /* ---- Мобільна версія ---- */
 @media(max-width:760px){
+  body{padding-left:min(var(--sw,0px),3vw);padding-right:min(var(--sw,0px),3vw)}
   .kfvs nav.top{flex-wrap:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch;padding:6px 8px}
   .kfvs nav.top button{flex:0 0 auto;padding:10px 12px;font-size:15px}
   .kfvs main{padding:18px 14px 36px}
@@ -181,6 +189,7 @@ html,body{margin:0}
 }
 </style>
 
+<div id="backdrop" hidden><div id="bdimg"></div><div id="bdtint"></div></div>
 <div class="kfvs" id="kfvs">
   <div class="note" id="note" hidden></div>
   <header id="banner" hidden><div id="bmedia"></div><div id="bfilm"></div><div class="bt"><b id="bt1"></b><span id="bt2"></span></div></header>
@@ -189,19 +198,19 @@ html,body{margin:0}
   <div id="fm" hidden><div class="pmp" role="dialog" aria-modal="true"><button id="fmx" aria-label="Закрити">×</button><h3 id="fmt"></h3><div id="fmc"></div></div></div>
   <div id="pm" hidden><div class="pmp" role="dialog" aria-modal="true"><button id="pmx" aria-label="Закрити">×</button><div id="pmc"></div></div></div>
   <div id="lb" hidden><button id="lbp" aria-label="Попереднє">‹</button><img id="lbimg" alt=""><button id="lbn" aria-label="Наступне">›</button><button id="lbx" aria-label="Закрити">×</button></div>
-  <div class="ver">бета 1.0</div>
+  <div class="ver">бета 1.2</div>
 </div>
 
 <script>
 /* ================= 1. НАЛАШТУВАННЯ ================= */
 // 1) Посилання на опубліковану CSV-таблицю (інструкція в чаті). Поки порожнє, показується демо-вміст.
-const SHEET_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQb8uuiVdBzc-WNsl-n8B_PnvH-5YgRne_yHxQzwJeMtEy6K_BxNgv5Onza9BVE-WFTYuSQsuN-xBv7/pub?gid=1403709242&single=true&output=csv";
+const SHEET_URL = "";
 
 // 1б) Ключ Google Drive API для галерей із папок (необов’язково; інструкція в чаті). Без ключа папка показується вбудованою сіткою Диска.
-const DRIVE_API_KEY = "AIzaSyBrupiflflOlGoPWYDmO9n_0DToTe-sR4s";
+const DRIVE_API_KEY = "";
 
 // 1в) Посилання на опубліковану CSV-версію аркуша «Налаштування» (кольори, шрифти, банер). Необов’язково.
-const SETTINGS_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQb8uuiVdBzc-WNsl-n8B_PnvH-5YgRne_yHxQzwJeMtEy6K_BxNgv5Onza9BVE-WFTYuSQsuN-xBv7/pub?gid=1758252892&single=true&output=csv";
+const SETTINGS_URL = "";
 
 // 1г) true — повна сторінка на власному хостингу (index.html), false — вбудова в Google Sites.
 const FULL_PAGE = true;
@@ -529,10 +538,16 @@ function openFile(i){
 
 /* ============ Налаштування вигляду (кольори, шрифти, банер) ============ */
 // Читає аркуш «Налаштування» (колонки: Параметр, Значення) як {параметр: значення}.
+let SET_INFO = {url: false, n: 0, err: ""};
 async function loadSettings(){
-  if (!SETTINGS_URL) return {};
-  try { const t = await (await fetch(SETTINGS_URL, {cache: "no-store"})).text(), o = {}; parseCSV(t).slice(1).forEach(a => { if (a[0]) o[norm(a[0])] = (a[1] || "").trim(); }); return o; }
-  catch (e) { return {}; }
+  SET_INFO.url = !!SETTINGS_URL; if (!SETTINGS_URL) return {};
+  try {
+    const r = await fetch(SETTINGS_URL, {cache: "no-store"}); if (!r.ok) throw new Error("статус " + r.status);
+    const t = (await r.text()).replace(/^\uFEFF/, ""), o = {};
+    if (/<html/i.test(t.slice(0, 300))) throw new Error("отримано сторінку замість CSV");
+    parseCSV(t).slice(1).forEach(a => { if (a[0]) o[norm(a[0])] = (a[1] || "").trim().replace(/^["'“”‘’]+|["'“”‘’]+$/g, ""); });
+    SET_INFO.n = Object.keys(o).length; return o;
+  } catch (e) { SET_INFO.err = e.message; return {}; }
 }
 // Застосовує кольори, шрифти й банер до сторінки.
 function applySettings(o){
@@ -543,12 +558,23 @@ function applySettings(o){
   if (FULL_PAGE && o["назва сайту"]) document.title = o["назва сайту"];
   // Ширина вмісту й бічні полоси (колір або зображення за межами вмісту)
   const W = parseInt(o["ширина сайту"], 10); root.style.maxWidth = W >= 500 && W <= 2400 ? W + "px" : ""; root.style.margin = "0 auto";
-  const sc = o["колір бічних полос"], si = o["зображення бічних полос"], bs = document.body.style;
+  // Ширина бічних полос: «120» (пікселі) або «10%»; 0 — без полос
+  const sw = String(o["ширина бічних полос"] || "").trim().toLowerCase().match(/^(\d{1,4})\s*(%|px)?$/), swv = sw ? (sw[2] === "%" ? Math.min(+sw[1], 45) + "%" : Math.min(+sw[1], 800) + "px") : "";
+  document.body.style.setProperty("--sw", swv || "0px");
+  const sc = o["колір бічних полос"], bs = document.body.style;
   bs.backgroundColor = sc && okColor(sc) ? sc : ""; document.documentElement.style.backgroundColor = bs.backgroundColor;
-  const su = si ? imgUrl(si, 2000) : ""; if (su) { bs.backgroundImage = 'url("' + su.replace(/"/g, "%22") + '")'; bs.backgroundSize = "cover"; bs.backgroundAttachment = "fixed"; }
+  // Підкладка: зображення + відтінок накладки; видна з боків і крізь прозорий фон сайту
+  const pn = (k, d) => { const n = parseInt(o[k], 10); return isNaN(n) ? d : Math.min(100, Math.max(0, n)); };
+  const sraw = o["зображення підкладки"] || o["зображення бічних полос"], su = sraw ? imgUrl(sraw, 2000) : "", tint = pn("підкладка накладка", 0), tc = o["підкладка відтінок"];
+  $("backdrop").hidden = !(su || tint);
+  $("bdimg").style.backgroundImage = su ? 'url("' + su.replace(/"/g, "%22") + '")' : ""; $("bdimg").style.opacity = String(1 - pn("підкладка прозорість", 0) / 100);
+  $("bdtint").style.background = tint ? `rgba(${bgRgb(tc && /^#/.test(tc) ? tc : "#000000")},${tint / 100})` : "";
   // Зображення на фоні вмісту з напівпрозорим шаром кольору фону
   const bu = o["зображення фону"] ? imgUrl(o["зображення фону"], 2000) : "";
   if (bu) { const n = parseInt(o["фон прозорість"], 10), a = (isNaN(n) ? 60 : Math.min(100, Math.max(0, n))) / 100, c = bgRgb(getComputedStyle(root).getPropertyValue("--bg")); root.style.backgroundImage = `linear-gradient(rgba(${c},${a}),rgba(${c},${a})),url("${bu.replace(/"/g, "%22")}")`; root.style.backgroundSize = "cover"; }
+  // Прозорість фону сайту: 0 — суцільний, 100 — повністю прозорий (видно підкладку)
+  const kk = 1 - pn("прозорість фону сайту", 0) / 100;
+  if (kk < 1) { if (!bu) root.style.backgroundColor = `rgba(${bgRgb(getComputedStyle(root).getPropertyValue("--bg"))},${kk})`; root.style.setProperty("--panel", `rgba(${bgRgb(o["колір панелі меню"] || "#FFFFFF")},${kk})`); }
   const b = $("banner"), show = FULL_PAGE || /^(так|yes|1)$/i.test(o["показувати банер"] || "");
   const vid = o["банер відео"], gif = o["банер gif"];
   if (!show || !(o["банер зображення"] || o["банер заголовок"] || vid || gif)) { b.hidden = true; return; }
@@ -713,7 +739,9 @@ document.addEventListener("click", e => {
   const note = m => { $("note").hidden = false; $("note").textContent = m; };
   window.addEventListener("error", e => note("Помилка скрипта: " + e.message));
   try {
-    applySettings(await loadSettings());
+    const st = await loadSettings(); applySettings(st);
+    // Діагностика для адміна: відкрийте сайт з додатком ?debug=1 до адреси
+    if (/[?&]debug/.test(location.search)) { const n = $("note"); n.hidden = false; n.textContent = "Діагностика. Налаштування: " + (SET_INFO.url ? (SET_INFO.err ? "помилка — " + SET_INFO.err : "завантажено параметрів: " + SET_INFO.n) : "SETTINGS_URL не задано") + ". " + ["колір фону", "колір тексту", "колір меню", "колір акценту", "колір заголовків і кнопок"].map(k => k + " = " + (st[k] || "—") + (st[k] && !okColor(st[k]) ? " (НЕ КОЛІР)" : "")).join("; "); }
     let csv = DEMO;
     if (!SHEET_URL) note("Демо-режим: підключіть Google Таблицю (змінна SHEET_URL), щоб показати свій вміст.");
     else {
