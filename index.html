@@ -466,15 +466,15 @@ function startPano(el, img){
 /* ================= 5. ДОДАТКОВІ МОДУЛІ ================= */
 /* ============ Повноекранний режим ============ */
 // Показує елемент (.fsw) на весь екран; якщо браузер не дозволяє — розтягує його на весь блок сторінки.
-function toggleFs(w){
-  if (!w) return;
-  if (w.classList.contains("fs") || document.fullscreenElement === w) { if (document.fullscreenElement) document.exitFullscreen(); w.classList.remove("fs"); }
-  else {
-    const rf = w.requestFullscreen || w.webkitRequestFullscreen, soft = () => w.classList.add("fs");
-    try { const pr = rf ? rf.call(w) : null; if (pr && pr.catch) pr.catch(soft); else if (!rf) soft(); } catch (e) { soft(); }
-  }
-  setTimeout(() => window.dispatchEvent(new Event("resize")), 150);
-}
+//function toggleFs(w){
+//  if (!w) return;
+//  if (w.classList.contains("fs") || document.fullscreenElement === w) { if (document.fullscreenElement) document.exitFullscreen(); w.classList.remove("fs"); }
+//  else {
+ //   const rf = w.requestFullscreen || w.webkitRequestFullscreen, soft = () => w.classList.add("fs");
+ //   try { const pr = rf ? rf.call(w) : null; if (pr && pr.catch) pr.catch(soft); else if (!rf) soft(); } catch (e) { soft(); }
+//  }
+//  setTimeout(() => window.dispatchEvent(new Event("resize")), 150);
+//}
 
 /* ============ Кнопки картки викладача й вікно папки ============ */
 let CURB = [];
