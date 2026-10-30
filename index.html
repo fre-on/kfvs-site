@@ -3,12 +3,14 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<link rel="icon" href="favicon.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
 <title>Циклова комісія кіно-, фото- та відеосправи</title>
 <style>html,body{margin:0}</style>
 </head>
 <body>
 <!--
-  САЙТ ЦИКЛОВОЇ КОМІСІЇ (бета 1.2)
+  САЙТ ЦИКЛОВОЇ КОМІСІЇ (бета 1.3)
   Весь вміст сайту береться з Google Таблиці; сам файл змінювати не потрібно, крім кількох налаштувань нижче.
 
   УСТАНОВКА: у Google Sites — Вставити → Вбудувати → Код вбудовування; або завантажте як index.html на власний хостинг (тоді FULL_PAGE = true).
@@ -198,19 +200,19 @@ body{box-sizing:border-box;padding-left:var(--sw,0px);padding-right:var(--sw,0px
   <div id="fm" hidden><div class="pmp" role="dialog" aria-modal="true"><button id="fmx" aria-label="Закрити">×</button><h3 id="fmt"></h3><div id="fmc"></div></div></div>
   <div id="pm" hidden><div class="pmp" role="dialog" aria-modal="true"><button id="pmx" aria-label="Закрити">×</button><div id="pmc"></div></div></div>
   <div id="lb" hidden><button id="lbp" aria-label="Попереднє">‹</button><img id="lbimg" alt=""><button id="lbn" aria-label="Наступне">›</button><button id="lbx" aria-label="Закрити">×</button></div>
-  <div class="ver">бета 1.2</div>
+  <div class="ver">бета 1.3</div>
 </div>
 
 <script>
 /* ================= 1. НАЛАШТУВАННЯ ================= */
 // 1) Посилання на опубліковану CSV-таблицю (інструкція в чаті). Поки порожнє, показується демо-вміст.
-const SHEET_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQb8uuiVdBzc-WNsl-n8B_PnvH-5YgRne_yHxQzwJeMtEy6K_BxNgv5Onza9BVE-WFTYuSQsuN-xBv7/pub?gid=1403709242&single=true&output=csv";
+const SHEET_URL = "";
 
 // 1б) Ключ Google Drive API для галерей із папок (необов’язково; інструкція в чаті). Без ключа папка показується вбудованою сіткою Диска.
-const DRIVE_API_KEY = "AIzaSyBrupiflflOlGoPWYDmO9n_0DToTe-sR4s";
+const DRIVE_API_KEY = "";
 
 // 1в) Посилання на опубліковану CSV-версію аркуша «Налаштування» (кольори, шрифти, банер). Необов’язково.
-const SETTINGS_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQb8uuiVdBzc-WNsl-n8B_PnvH-5YgRne_yHxQzwJeMtEy6K_BxNgv5Onza9BVE-WFTYuSQsuN-xBv7/pub?gid=1758252892&single=true&output=csv";
+const SETTINGS_URL = "";
 
 // 1г) true — повна сторінка на власному хостингу (index.html), false — вбудова в Google Sites.
 const FULL_PAGE = true;
@@ -286,7 +288,8 @@ const norm = s => String(s || "").toLowerCase().replace(/['’ʼ`]/g, "").replac
 // Усі колонки таблиці, які розуміє сайт.
 const COLS = ["Розділ","Підрозділ","Тип","Заголовок","Текст","Посилання","Зображення","Показувати","Колір","Розмір","Ширина","Шрифт","Вирівнювання","Докладно","Грамоти","Діє з","Діє до","Кнопки"];
 // Підбирає правильну назву колонки (регістр і пробіли неважливі).
-const canon = x => COLS.find(c => norm(c) === norm(x)) || String(x).trim();
+const ALIAS = {"діє від": "Діє з", "показувати з": "Діє з", "показувати від": "Діє з", "від": "Діє з", "діє по": "Діє до", "показувати до": "Діє до", "до": "Діє до"};
+const canon = x => COLS.find(c => norm(c) === norm(x)) || ALIAS[norm(x)] || String(x).trim();
 // Показує жовту смугу з повідомленням угорі сторінки.
 function warn(m){ const n = $("note"); n.hidden = false; n.textContent = m; if (n.dataset) n.dataset.nav = "1"; }
 // Екранує спецсимволи, щоб текст із таблиці не міг зламати сторінку.
@@ -296,16 +299,18 @@ const driveId = u => (u.match(/\/(?:d|folders)\/([\w-]{15,})/) || u.match(/[?&]i
 
 // Розпізнає дату у форматах ДД.ММ.РРРР та РРРР-ММ-ДД.
 function parseDate(s){
-  s = String(s || "").trim(); let m, d = null;
-  if ((m = s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/))) d = new Date(+m[1], +m[2] - 1, +m[3]), m = [0, m[3], m[2], m[1]];
+  s = String(s || "").trim(); let m, d = null; const tm = s.match(/[ T](\d{1,2}):(\d{2})/);
+  if ((m = s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/))) { d = new Date(+m[1], +m[2] - 1, +m[3]); m = [0, m[3], m[2], m[1]]; }
   else if ((m = s.match(/^(\d{1,2})[./](\d{1,2})[./](\d{4}|\d{2})(?!\d)/))) { let y = +m[3]; if (y < 100) y += 2000; d = new Date(y, +m[2] - 1, +m[1]); m = [0, m[1], m[2], y]; }
-  return d && d.getDate() === +m[1] && d.getMonth() === +m[2] - 1 ? d : null;
+  if (!(d && d.getDate() === +m[1] && d.getMonth() === +m[2] - 1)) return null;
+  if (tm) { d.setHours(+tm[1], +tm[2], 0, 0); d.hasTime = true; }   // дату можна вказувати з часом: 31.12.2026 18:00
+  return d;
 }
 // Чи показується рядок сьогодні (колонки «Діє з» і «Діє до»).
 function active(r){
-  const t = new Date(); t.setHours(0, 0, 0, 0);
+  const now = new Date(), day = new Date(now); day.setHours(0, 0, 0, 0);
   const a = parseDate(r["Діє з"]), b = parseDate(r["Діє до"]);
-  return !(a && t < a) && !(b && t > b);
+  return !(a && (a.hasTime ? now : day) < a) && !(b && (b.hasTime ? now : day) > b);
 }
 // Розпізнає тип блоку навіть із помилками в написанні («Дипломний фільм» → відео, «Фото 360» → панорама).
 function canonType(s){
@@ -404,7 +409,9 @@ function go(sec, sub){
   const subs = [...S.get(key).keys()], pick = subs.find(k => norm(k) === norm(sub));
   cur.sub = pick !== undefined ? pick : subs[0];
   draw();
-  $("kfvs").scrollIntoView({block:"start"});
+  // Не повертаємо до банера: прокручуємо лише якщо користувач уже опустився нижче початку вмісту
+  const lay = $("layout"), navH = $("top").offsetHeight; lay.style.scrollMarginTop = navH + "px";
+  if (lay.getBoundingClientRect().top < navH - 1) lay.scrollIntoView({block: "start"});
 }
 
 // Розмір і вирівнювання фото (колонки «Ширина»/«Розмір», «Вирівнювання»).
@@ -556,6 +563,7 @@ function applySettings(o){
   if (o["шрифт заголовків"] && okFont(o["шрифт заголовків"])) root.style.setProperty("--fh", `'${o["шрифт заголовків"]}'`);
   if (o["шрифт тексту"] && okFont(o["шрифт тексту"])) root.style.setProperty("--fb", `'${o["шрифт тексту"]}'`);
   if (FULL_PAGE && o["назва сайту"]) document.title = o["назва сайту"];
+  if (FULL_PAGE) setIcon(o["іконка сайту"]);
   // Ширина вмісту й бічні полоси (колір або зображення за межами вмісту)
   const W = parseInt(o["ширина сайту"], 10); root.style.maxWidth = W >= 500 && W <= 2400 ? W + "px" : ""; root.style.margin = "0 auto";
   // Ширина бічних полос: «120» (пікселі) або «10%»; 0 — без полос
@@ -615,6 +623,17 @@ function mountBannerVideo(b, u){
 }
 
 // Доповнює сторінку після відображення: панорами, галереї папок, картки-посилання.
+// Іконка вкладки браузера: посилання на зображення (Диск чи пряме), назва файла в репозиторії або емодзі.
+function setIcon(v){
+  v = String(v || "").trim(); if (!v) return;
+  let href = "";
+  if (/^https?:\/\//i.test(v)) href = imgUrl(v, 128);
+  else if (/^[\w.\/-]+\.(png|ico|svg|jpe?g|gif|webp)$/i.test(v)) href = v;
+  else if (v.length <= 8) href = "data:image/svg+xml," + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text x="50" y="82" font-size="84" text-anchor="middle">' + v.replace(/[<&>]/g, "") + "</text></svg>");
+  if (!href) return;
+  document.querySelectorAll('link[rel~="icon"],link[rel="apple-touch-icon"]').forEach(x => x.remove());
+  ["icon", "apple-touch-icon"].forEach(rel => { const l = document.createElement("link"); l.rel = rel; l.href = href; document.head.appendChild(l); });
+}
 function hydrate(){
   const m = $("main"); if (!m.querySelectorAll) return;
   m.querySelectorAll(".pano[data-src]").forEach(initPano);
