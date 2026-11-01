@@ -10,7 +10,7 @@
 </head>
 <body>
 <!--
-  САЙТ ЦИКЛОВОЇ КОМІСІЇ (бета 1.4)
+  САЙТ ЦИКЛОВОЇ КОМІСІЇ (бета 1.5)
   Весь вміст сайту береться з Google Таблиці; сам файл змінювати не потрібно, крім кількох налаштувань нижче.
 
   УСТАНОВКА: у Google Sites — Вставити → Вбудувати → Код вбудовування; або завантажте як index.html на власний хостинг (тоді FULL_PAGE = true).
@@ -174,6 +174,19 @@ body{box-sizing:border-box;padding-left:var(--sw,0px);padding-right:var(--sw,0px
 #backdrop[hidden]{display:none}
 #bdimg,#bdtint{position:absolute;inset:0}
 #bdimg{background:center/cover no-repeat}
+/* ---- Випадаюче меню підрозділів ---- */
+#dd{position:fixed;z-index:30;min-width:200px;max-width:min(92vw,360px);padding:6px;background:var(--vd);border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,.35)}
+#dd[hidden]{display:none}
+#dd button{display:block;width:100%;padding:10px 12px;border:0;border-radius:8px;background:transparent;color:var(--beam);font:inherit;text-align:left;cursor:pointer}
+#dd button:hover,#dd button[aria-current=true]{background:var(--amber);color:var(--vd)}
+.kfvs .car{font-size:.8em;opacity:.8}
+/* ---- Вирівнювання й ширина для будь-яких блоків ---- */
+.kfvs .blkw{display:flex;flex-direction:column;align-items:flex-start}
+.kfvs .blkw>.pano,.kfvs .blkw>.gal,.kfvs .blkw>.map,.kfvs .blkw>.lp,.kfvs .blkw>iframe,.kfvs .blkw>.fsw{width:100%}
+.kfvs .cards[data-al]{display:flex;flex-wrap:wrap}
+.kfvs .cards[data-al=center]{justify-content:center}
+.kfvs .cards[data-al=right]{justify-content:flex-end}
+.kfvs .cards[data-al] .card{flex:0 1 260px;max-width:100%}
 .kfvs .note{margin:0;padding:8px 16px;background:#fbf1de;color:var(--v);font-size:14px}
 @media(max-width:760px){.kfvs .layout{grid-template-columns:1fr}.kfvs aside{display:flex;gap:0;overflow-x:auto;-webkit-overflow-scrolling:touch;padding:0 8px;border-right:0;border-bottom:1px solid var(--line)}.kfvs aside h3{display:none}.kfvs aside button{flex:0 0 auto;width:auto;white-space:nowrap;padding:13px 14px;border:0;border-bottom:3px solid transparent;border-radius:0;background:transparent}.kfvs aside button:hover{background:transparent}.kfvs aside button[aria-current=true]{border-left-color:transparent;border-bottom-color:var(--amber);background:transparent;font-weight:600}}
 /* ---- Мобільна версія ---- */
@@ -196,23 +209,24 @@ body{box-sizing:border-box;padding-left:var(--sw,0px);padding-right:var(--sw,0px
   <div class="note" id="note" hidden></div>
   <header id="banner" hidden><div id="bmedia"></div><div id="bfilm"></div><div class="bt"><b id="bt1"></b><span id="bt2"></span></div></header>
   <nav class="top" id="top" aria-label="Розділи сайту"></nav>
+  <div id="dd" hidden role="menu"></div>
   <div class="layout" id="layout"><aside id="side" aria-label="Підрозділи"></aside><main id="main"><p>Завантаження… Якщо цей напис не зникає, у цьому режимі не виконуються скрипти.</p></main></div>
   <div id="fm" hidden><div class="pmp" role="dialog" aria-modal="true"><button id="fmx" aria-label="Закрити">×</button><h3 id="fmt"></h3><div id="fmc"></div></div></div>
   <div id="pm" hidden><div class="pmp" role="dialog" aria-modal="true"><button id="pmx" aria-label="Закрити">×</button><div id="pmc"></div></div></div>
   <div id="lb" hidden><button id="lbp" aria-label="Попереднє">‹</button><img id="lbimg" alt=""><button id="lbn" aria-label="Наступне">›</button><button id="lbx" aria-label="Закрити">×</button></div>
-  <div class="ver">бета 1.4</div>
+  <div class="ver">бета 1.5</div>
 </div>
 
 <script>
 /* ================= 1. НАЛАШТУВАННЯ ================= */
 // 1) Посилання на опубліковану CSV-таблицю (інструкція в чаті). Поки порожнє, показується демо-вміст.
-const SHEET_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQb8uuiVdBzc-WNsl-n8B_PnvH-5YgRne_yHxQzwJeMtEy6K_BxNgv5Onza9BVE-WFTYuSQsuN-xBv7/pub?gid=1403709242&single=true&output=csv";
+const SHEET_URL = "";
 
 // 1б) Ключ Google Drive API для галерей із папок (необов’язково; інструкція в чаті). Без ключа папка показується вбудованою сіткою Диска.
-const DRIVE_API_KEY = "AIzaSyBrupiflflOlGoPWYDmO9n_0DToTe-sR4s";
+const DRIVE_API_KEY = "";
 
 // 1в) Посилання на опубліковану CSV-версію аркуша «Налаштування» (кольори, шрифти, банер). Необов’язково.
-const SETTINGS_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQb8uuiVdBzc-WNsl-n8B_PnvH-5YgRne_yHxQzwJeMtEy6K_BxNgv5Onza9BVE-WFTYuSQsuN-xBv7/pub?gid=1758252892&single=true&output=csv";
+const SETTINGS_URL = "";
 
 // 1г) true — повна сторінка на власному хостингу (index.html), false — вбудова в Google Sites.
 const FULL_PAGE = true;
@@ -384,6 +398,17 @@ function blockStyle(r){
 }
 
 /* ================= 6. НАВІГАЦІЯ І ПОДІЇ ================= */
+// ---- Випадаюче меню підрозділів (параметр «Меню підрозділів»: панель / випадаюче / обидва) ----
+let SUBMENU = "panel";
+const ddEnabled = sec => SUBMENU !== "panel" && S.has(sec) && S.get(sec).size > 1;
+function closeDD(){ const d = $("dd"); if (d) d.hidden = true; }
+// Відкриває список підрозділів під кнопкою розділу.
+function openDD(sec){
+  const dd = $("dd"), btn = [...$("top").querySelectorAll("[data-sec]")].find(b => b.dataset.sec === sec); if (!btn || !S.has(sec)) return;
+  dd.innerHTML = [...S.get(sec).keys()].map(k => `<button type="button" class="ddi" role="menuitem" data-dsec="${esc(sec)}" data-dsub="${esc(k)}" ${sec === cur.sec && k === cur.sub ? 'aria-current="true"' : ""}>${esc(k || "Огляд")}</button>`).join("");
+  dd.hidden = false; const r = btn.getBoundingClientRect();
+  dd.style.top = Math.round(r.bottom) + "px"; dd.style.left = Math.max(8, Math.min(r.left, window.innerWidth - dd.offsetWidth - 8)) + "px";
+}
 // Прокручує рядок вкладок так, щоб активна кнопка була посередині.
 function centerActive(box){ const b = box && box.querySelector('[aria-current="true"]'); if (b && box.scrollWidth > box.clientWidth) box.scrollLeft = b.offsetLeft - (box.clientWidth - b.offsetWidth) / 2; }
 // Чи є між елементом і вмістом контейнер, який сам гортається вбік (тоді жест не перемикає розділ).
@@ -584,6 +609,7 @@ function applySettings(o){
   if (o["шрифт тексту"] && okFont(o["шрифт тексту"])) { loadFont(o["шрифт тексту"]); root.style.setProperty("--fb", `'${o["шрифт тексту"]}'`); }
   if (FULL_PAGE && o["назва сайту"]) document.title = o["назва сайту"];
   if (FULL_PAGE) setIcon(o["іконка сайту"]);
+  const sm = String(o["меню підрозділів"] || "").toLowerCase(); SUBMENU = /випад/.test(sm) ? "dropdown" : /обидв/.test(sm) ? "both" : "panel";
   // Ширина вмісту й бічні полоси (колір або зображення за межами вмісту)
   const W = parseInt(o["ширина сайту"], 10); root.style.maxWidth = W >= 500 && W <= 2400 ? W + "px" : ""; root.style.margin = "0 auto";
   // Ширина бічних полос: «120» (пікселі) або «10%»; 0 — без полос
@@ -687,7 +713,19 @@ function linkCard(r, lu){
   return `<a class="lp" ${linkAttrs(lu)} data-url="${esc(lu)}"><div class="lpi"${imgs.length ? "" : " hidden"}>${imgs.map(s => `<img src="${esc(s)}" referrerpolicy="no-referrer" loading="lazy" alt="">`).join("")}</div><div class="lpb"><b class="lpt">${esc(r["Заголовок"])}</b><span class="lpd">${esc(desc)}</span><small class="lph">${esc(host)}</small></div></a>`;
 }
 /* ================= 4. БЛОКИ СТОРІНКИ (рядок таблиці → HTML) ================= */
+// Обгортка зі шириною та вирівнюванням для типів без власного вирівнювання (відео, вбудова, панорама, карта, галерея, файл, посилання).
+const WRAP_TYPES = new Set(["відео", "вбудова", "панорама", "карта", "галерея", "файл", "посилання"]);
 function block(r){
+  const html = block0(r), tn = String(r["Тип"] || "").toLowerCase().replace(/['’ʼ`\-_\s]/g, "");
+  const alRaw = (r["Вирівнювання"] || "").trim().toLowerCase(), wRaw = (r["Ширина"] || "").trim().toLowerCase();
+  if (!html || !WRAP_TYPES.has(tn) || !(alRaw || wRaw)) return html;
+  const al = {"ліворуч": "flex-start", "по центру": "center", "праворуч": "flex-end", "за шириною": "stretch"}[alRaw] || "flex-start";
+  const m = wRaw.match(/^(\d{1,4})\s*(%|px)?$/); let w = "";
+  if (m) { const n = +m[1]; if (m[2] === "%") { if (n >= 5 && n <= 100) w = `max-width:${n}%;`; } else if (n >= 20 && n <= 1600) w = `max-width:min(100%,${n}px);`; }
+  const mg = al === "center" ? "margin-inline:auto;" : al === "flex-end" ? "margin-left:auto;" : "";
+  return `<div class="blkw" style="align-items:${al};${w}${mg}">${html}</div>`;
+}
+function block0(r){
   const t = r["Тип"].toLowerCase(), title = r["Заголовок"] ? `<h2>${esc(r["Заголовок"])}</h2>` : "", la = linkAttrs(r["Посилання"]), txtUrl = /^https?:\/\/\S+$/i.test(r["Текст"]), raw = r["Посилання"] || r["Зображення"] || (txtUrl ? r["Текст"] : "");
   const tn = t.replace(/['’ʼ`\-_\s]/g, "");
   if (tn === "посилання" || tn === "превю") { const lu = safeUrl(r["Посилання"] || (txtUrl ? r["Текст"] : "")); return lu ? linkCard(r, lu) : ""; }
@@ -723,14 +761,16 @@ function card(r){
 function draw(){
   PROF = [];
   const secs = S.get(cur.sec), subs = [...secs.keys()];
-  $("top").innerHTML = [...S.keys()].map(k => `<button data-sec="${esc(k)}" ${k===cur.sec?'aria-current="true"':""}>${esc(k)}</button>`).join("");
-  const showSide = subs.length > 1 || subs[0] !== "";
+  closeDD();
+  $("top").innerHTML = [...S.keys()].map(k => `<button data-sec="${esc(k)}" ${k===cur.sec?'aria-current="true"':""}>${esc(k)}${ddEnabled(k) ? ' <span class="car">▾</span>' : ""}</button>`).join("");
+  const showSide = (subs.length > 1 || subs[0] !== "") && SUBMENU !== "dropdown";
   $("layout").className = "layout" + (showSide ? "" : " solo");
   $("side").hidden = !showSide;
   $("side").innerHTML = showSide ? `<h3>${esc(cur.sec)}</h3>` + subs.map(k => `<button data-sub="${esc(k)}" ${k===cur.sub?'aria-current="true"':""}>${esc(k || "Огляд")}</button>`).join("") : "";
   let html = `<h1>${esc(cur.sub || cur.sec)}</h1>`, group = "";
-  const flush = () => { if (group) { html += `<div class="cards">${group}</div>`; group = ""; } };
-  secs.get(cur.sub).forEach(r => { if (r["Тип"].toLowerCase() === "картка") group += card(r); else { flush(); html += block(r); } });
+  let galign = ""; const AL = {"по центру": "center", "праворуч": "right", "ліворуч": "left"};
+  const flush = () => { if (group) { html += `<div class="cards"${AL[galign] ? ` data-al="${AL[galign]}"` : ""}>${group}</div>`; group = ""; } };
+  secs.get(cur.sub).forEach(r => { if (r["Тип"].toLowerCase() === "картка") { if (!group) galign = (r["Вирівнювання"] || "").trim().toLowerCase(); group += card(r); } else { flush(); html += block(r); } });
   flush();
   $("main").innerHTML = html;
   hydrate();
@@ -759,6 +799,8 @@ document.addEventListener("keydown", e => {
 document.addEventListener("input", e => { const t = e.target; if (t.classList && t.classList.contains("bar")) t.parentNode.style.setProperty("--p", t.value + "%"); });
 document.addEventListener("fullscreenchange", () => window.dispatchEvent(new Event("resize")));
 document.addEventListener("click", e => {
+  if (!e.target.closest("#dd, nav.top [data-sec]")) closeDD();
+  const ddi = e.target.closest(".ddi"); if (ddi) { go(ddi.dataset.dsec, ddi.dataset.dsub); return; }
   const fsb = e.target.closest("[data-fs]"); if (fsb) { toggleFs(fsb.closest(".fsw")); return; }
   const pb = e.target.closest(".pb"); if (pb) { openFolder(CURB[+pb.dataset.pb]); return; }
   const fi = e.target.closest(".fi"); if (fi) { openFile(+fi.dataset.f); return; }
@@ -774,10 +816,23 @@ document.addEventListener("click", e => {
   const hd = e.target.closest("[data-hint]"); if (hd) { warn(hd.dataset.hint); return; }
   const el = e.target.closest("[data-sec],[data-sub],[data-go]");
   if (!el) return;
-  if (el.dataset.sec) go(el.dataset.sec);
+  if (el.dataset.sec) {
+    const sec = el.dataset.sec, dd = ddEnabled(sec);
+    if (dd && cur.sec === sec) { $("dd").hidden ? openDD(sec) : closeDD(); }
+    else { go(sec); if (dd) openDD(sec); }
+  }
   else if (el.dataset.sub !== undefined) go(cur.sec, el.dataset.sub);
   else { e.preventDefault(); go(el.dataset.go); }
 });
+
+// На пристроях із мишею список підрозділів відкривається при наведенні; будь-де закривається по Esc, при прокручуванні чи кліку поза ним.
+window.addEventListener("scroll", closeDD, {passive: true});
+document.addEventListener("keydown", e => { if (e.key === "Escape") closeDD(); });
+if (window.matchMedia && matchMedia("(hover: hover)").matches) {
+  let tm; const stop = () => clearTimeout(tm), later = () => { stop(); tm = setTimeout(closeDD, 300); };
+  $("top").addEventListener("mouseover", e => { const b = e.target.closest("[data-sec]"); if (b && ddEnabled(b.dataset.sec)) { stop(); openDD(b.dataset.sec); } else if (b) closeDD(); });
+  $("top").addEventListener("mouseleave", later); $("dd").addEventListener("mouseenter", stop); $("dd").addEventListener("mouseleave", later);
+}
 
 /* ================= 7. ЗАПУСК ================= */
 (async () => {
