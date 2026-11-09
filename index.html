@@ -10,7 +10,7 @@
 </head>
 <body>
 <!--
-  САЙТ ЦИКЛОВОЇ КОМІСІЇ (бета 1.5)
+  САЙТ ЦИКЛОВОЇ КОМІСІЇ (бета 1.6)
   Весь вміст сайту береться з Google Таблиці; сам файл змінювати не потрібно, крім кількох налаштувань нижче.
 
   УСТАНОВКА: у Google Sites — Вставити → Вбудувати → Код вбудовування; або завантажте як index.html на власний хостинг (тоді FULL_PAGE = true).
@@ -187,6 +187,15 @@ body{box-sizing:border-box;padding-left:var(--sw,0px);padding-right:var(--sw,0px
 .kfvs .cards[data-al=center]{justify-content:center}
 .kfvs .cards[data-al=right]{justify-content:flex-end}
 .kfvs .cards[data-al] .card{flex:0 1 260px;max-width:100%}
+/* ---- Посилання на конкретний елемент (якорі, підсвітка, кнопки копіювання) ---- */
+.kfvs .anc{position:relative;scroll-margin-top:90px}
+.kfvs .card{position:relative}
+.kfvs .flash{animation:kfflash 2.4s ease}
+@keyframes kfflash{0%,60%{box-shadow:0 0 0 4px var(--amber)}100%{box-shadow:0 0 0 0 transparent}}
+#pml,#fml{position:absolute;top:10px;right:56px;height:36px;padding:0 14px;border:0;border-radius:18px;background:#fff;font:inherit;font-size:14px;cursor:pointer}
+.kfvs .lnk{position:absolute;top:6px;right:6px;z-index:4;padding:2px 7px;border:0;border-radius:6px;background:var(--beam);color:var(--vd);font-size:14px;cursor:pointer}
+.kfvs h1{position:relative}
+.kfvs h1 .lnk{position:static;margin-left:10px;vertical-align:middle}
 .kfvs .note{margin:0;padding:8px 16px;background:#fbf1de;color:var(--v);font-size:14px}
 @media(max-width:760px){.kfvs .layout{grid-template-columns:1fr}.kfvs aside{display:flex;gap:0;overflow-x:auto;-webkit-overflow-scrolling:touch;padding:0 8px;border-right:0;border-bottom:1px solid var(--line)}.kfvs aside h3{display:none}.kfvs aside button{flex:0 0 auto;width:auto;white-space:nowrap;padding:13px 14px;border:0;border-bottom:3px solid transparent;border-radius:0;background:transparent}.kfvs aside button:hover{background:transparent}.kfvs aside button[aria-current=true]{border-left-color:transparent;border-bottom-color:var(--amber);background:transparent;font-weight:600}}
 /* ---- Мобільна версія ---- */
@@ -211,98 +220,99 @@ body{box-sizing:border-box;padding-left:var(--sw,0px);padding-right:var(--sw,0px
   <nav class="top" id="top" aria-label="Розділи сайту"></nav>
   <div id="dd" hidden role="menu"></div>
   <div class="layout" id="layout"><aside id="side" aria-label="Підрозділи"></aside><main id="main"><p>Завантаження… Якщо цей напис не зникає, у цьому режимі не виконуються скрипти.</p></main></div>
-  <div id="fm" hidden><div class="pmp" role="dialog" aria-modal="true"><button id="fmx" aria-label="Закрити">×</button><h3 id="fmt"></h3><div id="fmc"></div></div></div>
-  <div id="pm" hidden><div class="pmp" role="dialog" aria-modal="true"><button id="pmx" aria-label="Закрити">×</button><div id="pmc"></div></div></div>
+  <div id="fm" hidden><div class="pmp" role="dialog" aria-modal="true"><button id="fmx" aria-label="Закрити">×</button><button id="fml" type="button" aria-label="Копіювати посилання">🔗 Посилання</button><h3 id="fmt"></h3><div id="fmc"></div></div></div>
+  <div id="pm" hidden><div class="pmp" role="dialog" aria-modal="true"><button id="pmx" aria-label="Закрити">×</button><button id="pml" type="button" aria-label="Копіювати посилання на цю картку">🔗 Посилання</button><div id="pmc"></div></div></div>
   <div id="lb" hidden><button id="lbp" aria-label="Попереднє">‹</button><img id="lbimg" alt=""><button id="lbn" aria-label="Наступне">›</button><button id="lbx" aria-label="Закрити">×</button></div>
-  <div class="ver">бета 1.5</div>
+  <div class="ver">бета 1.6</div>
 </div>
 
 <script>
 /* ================= 1. НАЛАШТУВАННЯ ================= */
 // 1) Посилання на опубліковану CSV-таблицю (інструкція в чаті). Поки порожнє, показується демо-вміст.
-const SHEET_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQb8uuiVdBzc-WNsl-n8B_PnvH-5YgRne_yHxQzwJeMtEy6K_BxNgv5Onza9BVE-WFTYuSQsuN-xBv7/pub?gid=1403709242&single=true&output=csv";
+const SHEET_URL = "";
 
 // 1б) Ключ Google Drive API для галерей із папок (необов’язково; інструкція в чаті). Без ключа папка показується вбудованою сіткою Диска.
-const DRIVE_API_KEY = "AIzaSyBrupiflflOlGoPWYDmO9n_0DToTe-sR4s";
+const DRIVE_API_KEY = "";
 
 // 1в) Посилання на опубліковану CSV-версію аркуша «Налаштування» (кольори, шрифти, банер). Необов’язково.
-const SETTINGS_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQb8uuiVdBzc-WNsl-n8B_PnvH-5YgRne_yHxQzwJeMtEy6K_BxNgv5Onza9BVE-WFTYuSQsuN-xBv7/pub?gid=1758252892&single=true&output=csv";
+const SETTINGS_URL = "";
 
 // 1г) true — повна сторінка на власному хостингу (index.html), false — вбудова в Google Sites.
 const FULL_PAGE = true;
 
 /* ================= 2. ДЕМО-ДАНІ (показуються, поки не підключено таблицю) ================= */
-const DEMO = `Розділ,Підрозділ,Тип,Заголовок,Текст,Посилання,Зображення,Показувати,Колір,Розмір,Ширина,Шрифт,Вирівнювання,Докладно,Грамоти,Діє з,Діє до,Кнопки
+const DEMO = `Розділ,Підрозділ,Тип,Заголовок,Текст,Посилання,Зображення,Показувати,Колір,Розмір,Ширина,Шрифт,Вирівнювання,Докладно,Грамоти,Діє з,Діє до,Кнопки,Фото у вікні,Якір
 Головна,,текст,"Циклова комісія кіно-, фото- та відеосправи","Ми готуємо фахівців, які вміють розповідати історії зображенням і звуком: від ідеї та сценарію до зйомки, монтажу й показу готового фільму.
-На цьому сайті вступники знайдуть інформацію про навчання, студенти — матеріали й розклад, а партнери — приклади робіт і контакти для співпраці.",,,так,,,,,,,,,,
-Головна,,картка,Вступникам,"Дізнайтеся, чого ми навчаємо, як вступити та що чекає на студента.",#Вступникам,,так,,,,,,,,,,
-Головна,,картка,Студентам,"Розклад, навчальні матеріали, завдання та заявки на техніку.",#Студентам,,так,,,,,,,,,,
-Головна,,картка,Оголошення,"Актуальні новини, терміни та важливі повідомлення.",#Оголошення,,так,,,,,,,,,,
-Головна,,картка,Партнерам,"Співпраця, практика студентів, історії випускників.",#Партнерам,,так,,,,,,,,,,
+На цьому сайті вступники знайдуть інформацію про навчання, студенти — матеріали й розклад, а партнери — приклади робіт і контакти для співпраці.",,,так,,,,,,,,,,,,
+Головна,,картка,Вступникам,"Дізнайтеся, чого ми навчаємо, як вступити та що чекає на студента.",#Вступникам,,так,,,,,,,,,,,,
+Головна,,картка,Студентам,"Розклад, навчальні матеріали, завдання та заявки на техніку.",#Студентам,,так,,,,,,,,,,,,
+Головна,,картка,Оголошення,"Актуальні новини, терміни та важливі повідомлення.",#Оголошення,,так,,,,,,,,,,,,
+Головна,,картка,Партнерам,"Співпраця, практика студентів, історії випускників.",#Партнерам,,так,,,,,,,,,,,,
 Головна,,текст,Чого ми навчаємо,"Кінорежисура та операторська майстерність.
 Фотографія: від портрета до репортажу.
 Відеопродакшн і монтаж.
 Звукорежисура та робота зі звуком у кіно.
-Комп’ютерна графіка й сучасні цифрові технології.",,,так,,,,,,,,,,
-Головна,,відео,Шоуріл комісії,,https://www.youtube.com/watch?v=ВСТАВТЕ_ID,,ні,,,,,,,,,,
+Комп’ютерна графіка й сучасні цифрові технології.",,,так,,,,,,,,,,,,
+Головна,,відео,Шоуріл комісії,,https://www.youtube.com/watch?v=ВСТАВТЕ_ID,,ні,,,,,,,,,,,,
 Про комісію,Хто ми,текст,Про комісію,"Циклова комісія об’єднує викладачів, які працюють у напрямах кіно, фотографії, відео та звуку. Ми поєднуємо теорію з практикою: студенти знімають, монтують і показують власні роботи вже під час навчання.
-Наша мета — виховати авторів і фахівців, затребуваних у кіно, на телебаченні, в рекламі та медіа.",,,так,,,,,,,,,,
+Наша мета — виховати авторів і фахівців, затребуваних у кіно, на телебаченні, в рекламі та медіа.",,,так,,,,,,,,,,,,
 Про комісію,Викладачі,картка,Прізвище Ім’я По батькові,Викладач. Напрям: [кінорежисура]. Контакт: [e-mail],,,так,,,,,,"**Освіта:** [заклад, рік закінчення]
 **Стаж:** [кількість років]
-Коротко про досвід, предмети, проєкти й досягнення. Текст можна оформлювати так само, як в інших блоках: [колір=#b3261e]виділення[/колір], [посилання](https://example.com).",,,,
-Про комісію,Викладачі,картка,Прізвище Ім’я По батькові,Викладач. Напрям: [фотографія]. Контакт: [e-mail],,,так,,,,,,,,,,
-Про комісію,Викладачі,картка,Прізвище Ім’я По батькові,Викладач. Напрям: [звук і монтаж]. Контакт: [e-mail],,,так,,,,,,,,,,
+Коротко про досвід, предмети, проєкти й досягнення. Текст можна оформлювати так само, як в інших блоках: [колір=#b3261e]виділення[/колір], [посилання](https://example.com).",,,,,,
+Про комісію,Викладачі,картка,Прізвище Ім’я По батькові,Викладач. Напрям: [фотографія]. Контакт: [e-mail],,,так,,,,,,,,,,,,
+Про комісію,Викладачі,картка,Прізвище Ім’я По батькові,Викладач. Напрям: [звук і монтаж]. Контакт: [e-mail],,,так,,,,,,,,,,,,
 Про комісію,Матеріальна база,текст,Студії та техніка,"Для навчання ми використовуємо навчальну студію, кабінет-лабораторію звукозапису, комп’ютерні класи для монтажу та графіки, а також камери, світло й аудіообладнання.
-Детальний перелік техніки та правила її використання розміщено в розділі «Студентам».",,,так,,,,,,,,,,
-Про комісію,Віртуальний тур,текст,Наші аудиторії та студії,Оглянути приміщення можна у форматі 360° або в відеотурі. Приклади розмітки приховані (колонка «Показувати» = ні).,,,так,,,,,,,,,,
-Про комісію,Віртуальний тур,панорама,Студія звукозапису,,,https://drive.google.com/file/d/ВСТАВТЕ_ID/view,ні,,,,,,,,,,
-Про комісію,Віртуальний тур,відео,Відеотур,,https://www.youtube.com/watch?v=ВСТАВТЕ_ID,,ні,,,,,,,,,,
-Про комісію,Документи,файл,План роботи комісії,Навчальний рік [20__–20__],https://drive.google.com/,,так,,,,,,,,,,
-Про комісію,Документи,файл,Освітні програми,Програми та навчальні плани,https://drive.google.com/,,так,,,,,,,,,,
+Детальний перелік техніки та правила її використання розміщено в розділі «Студентам».",,,так,,,,,,,,,,,,
+Про комісію,Віртуальний тур,текст,Наші аудиторії та студії,Оглянути приміщення можна у форматі 360° або в відеотурі. Приклади розмітки приховані (колонка «Показувати» = ні).,,,так,,,,,,,,,,,,
+Про комісію,Віртуальний тур,панорама,Студія звукозапису,,,https://drive.google.com/file/d/ВСТАВТЕ_ID/view,ні,,,,,,,,,,,,
+Про комісію,Віртуальний тур,відео,Відеотур,,https://www.youtube.com/watch?v=ВСТАВТЕ_ID,,ні,,,,,,,,,,,,
+Про комісію,Документи,файл,План роботи комісії,Навчальний рік [20__–20__],https://drive.google.com/,,так,,,,,,,,,,,,
+Про комісію,Документи,файл,Освітні програми,Програми та навчальні плани,https://drive.google.com/,,так,,,,,,,,,,,,
 Вступникам,Спеціальності,текст,Чого ми навчаємо,"Студенти опановують повний шлях створення аудіовізуального твору: сценарій, режисуру, зйомку, світло, звук, монтаж і постпродакшн.
-Перелік спеціальностей, освітніх програм і форм навчання (денна, заочна) уточнюйте у приймальній комісії закладу.",,,так,,,,,,,,,,
+Перелік спеціальностей, освітніх програм і форм навчання (денна, заочна) уточнюйте у приймальній комісії закладу.",,,так,,,,,,,,,,,,
 Вступникам,Правила вступу,текст,Як вступити,"Правила вступу щороку оновлюються. Актуальні терміни, перелік документів і вимоги до вступних випробувань публікує приймальна комісія.
-Якщо маєте запитання, напишіть або зателефонуйте нам — розділ «Контакти».",,,так,,,,,,,,,,
-Вступникам,Правила вступу,файл,Правила прийому,Офіційний документ,https://drive.google.com/,,так,,,,,,,,,,
-Вступникам,Питання й відповіді,текст,Чи потрібна власна техніка?,"Ні. Базова техніка для навчання є в закладі, її можна взяти за заявкою. Власне обладнання стане в пригоді, але не є обов’язковим.",,,так,,,,,,,,,,
-Вступникам,Питання й відповіді,текст,Де можна працювати після навчання?,"Випускники працюють на телебаченні, у студіях відеопродакшну, рекламі, медіа, на фестивалях і як незалежні автори.",,,так,,,,,,,,,,
-Вступникам,Питання й відповіді,текст,Чи будуть студентські роботи показувати?,Так. Найкращі роботи показуємо в Кінозалі КФВС і надсилаємо на конкурси та фестивалі.,,,так,,,,,,,,,,
-Студентам,Розклад,текст,Розклад занять,"Актуальний розклад розміщено нижче. Якщо він не відкривається, зверніться до старости групи чи куратора.",,,так,,,,,,,,,,
-Студентам,Розклад,вбудова,Розклад,,https://drive.google.com/,,ні,,,,,,,,,,
-Студентам,Матеріали,текст,Навчальні матеріали,"Конспекти лекцій, презентації та методичні вказівки до практичних робіт розміщено за дисциплінами.",,,так,,,,,,,,,,
-Студентам,Матеріали,файл,Матеріали за дисциплінами,Папка на Google Диску,https://drive.google.com/,,так,,,,,,,,,,
-Студентам,Практичні й кваліфікаційні роботи,текст,Роботи та захисти,"Вимоги до оформлення, терміни подання й графік захистів публікуються тут. Перед здачею перевіряйте актуальну версію вимог.",,,так,,,,,,,,,,
-Студентам,Заявка на техніку,текст,Як взяти техніку,"Подайте заявку не пізніше ніж за два дні до зйомки. Вкажіть дату, обладнання та відповідального за повернення.",,,так,,,,,,,,,,
-Студентам,Заявка на техніку,вбудова,Форма заявки,,https://forms.google.com/,,ні,,,,,,,,,,
-Оголошення,,текст,Приклад чинного оголошення,"Оголошення показується до дати, указаної в колонці «Діє до». Дату записуйте так: 31.12.2027.",,,так,,,,,,,,,31.12.2027,
-Оголошення,,текст,Приклад застарілого оголошення,"Це оголошення вже неактуальне, тому на сайті воно не відображається.",,,так,,,,,,,,,01.09.2026,
-Портфоліо,Кіно,текст,Студентські фільми,"Короткометражні ігрові, документальні та навчальні роботи студентів. Додавайте відео рядками з типом «відео».",,,так,,,,,,,,,,
-Портфоліо,Фото,текст,Фоторобіти,"Серії, портрети, репортажі й експерименти студентів. Додавайте зображення рядками з типом «фото».",,,так,,,,,,,,,,
-Портфоліо,Відео,текст,Відео та кліпи,"Рекламні, музичні та навчальні відеопроєкти.",,,так,,,,,,,,,,
-Портфоліо,Звук,текст,Звукові роботи,"Саунддизайн, запис і зведення, музичне оформлення фільмів.",,,так,,,,,,,,,,
+Якщо маєте запитання, напишіть або зателефонуйте нам — розділ «Контакти».",,,так,,,,,,,,,,,,
+Вступникам,Правила вступу,файл,Правила прийому,Офіційний документ,https://drive.google.com/,,так,,,,,,,,,,,,
+Вступникам,Питання й відповіді,текст,Чи потрібна власна техніка?,"Ні. Базова техніка для навчання є в закладі, її можна взяти за заявкою. Власне обладнання стане в пригоді, але не є обов’язковим.",,,так,,,,,,,,,,,,
+Вступникам,Питання й відповіді,текст,Де можна працювати після навчання?,"Випускники працюють на телебаченні, у студіях відеопродакшну, рекламі, медіа, на фестивалях і як незалежні автори.",,,так,,,,,,,,,,,,
+Вступникам,Питання й відповіді,текст,Чи будуть студентські роботи показувати?,Так. Найкращі роботи показуємо в Кінозалі КФВС і надсилаємо на конкурси та фестивалі.,,,так,,,,,,,,,,,,
+Студентам,Розклад,текст,Розклад занять,"Актуальний розклад розміщено нижче. Якщо він не відкривається, зверніться до старости групи чи куратора.",,,так,,,,,,,,,,,,
+Студентам,Розклад,вбудова,Розклад,,https://drive.google.com/,,ні,,,,,,,,,,,,
+Студентам,Матеріали,текст,Навчальні матеріали,"Конспекти лекцій, презентації та методичні вказівки до практичних робіт розміщено за дисциплінами.",,,так,,,,,,,,,,,,
+Студентам,Матеріали,файл,Матеріали за дисциплінами,Папка на Google Диску,https://drive.google.com/,,так,,,,,,,,,,,,
+Студентам,Практичні й кваліфікаційні роботи,текст,Роботи та захисти,"Вимоги до оформлення, терміни подання й графік захистів публікуються тут. Перед здачею перевіряйте актуальну версію вимог.",,,так,,,,,,,,,,,,
+Студентам,Заявка на техніку,текст,Як взяти техніку,"Подайте заявку не пізніше ніж за два дні до зйомки. Вкажіть дату, обладнання та відповідального за повернення.",,,так,,,,,,,,,,,,
+Студентам,Заявка на техніку,вбудова,Форма заявки,,https://forms.google.com/,,ні,,,,,,,,,,,,
+Оголошення,,текст,Приклад чинного оголошення,"Оголошення показується до дати, указаної в колонці «Діє до». Дату записуйте так: 31.12.2027.",,,так,,,,,,,,,31.12.2027,,,
+Оголошення,,текст,Приклад застарілого оголошення,"Це оголошення вже неактуальне, тому на сайті воно не відображається.",,,так,,,,,,,,,01.09.2026,,,
+Портфоліо,Кіно,текст,Студентські фільми,"Короткометражні ігрові, документальні та навчальні роботи студентів. Додавайте відео рядками з типом «відео».",,,так,,,,,,,,,,,,
+Портфоліо,Фото,текст,Фоторобіти,"Серії, портрети, репортажі й експерименти студентів. Додавайте зображення рядками з типом «фото».",,,так,,,,,,,,,,,,
+Портфоліо,Відео,текст,Відео та кліпи,"Рекламні, музичні та навчальні відеопроєкти.",,,так,,,,,,,,,,,,
+Портфоліо,Звук,текст,Звукові роботи,"Саунддизайн, запис і зведення, музичне оформлення фільмів.",,,так,,,,,,,,,,,,
 Новини,,текст,Новини комісії,"Тут публікуємо новини про фестивалі, майстер-класи, зйомки й нагороди.
-Приклад оформлення: **жирний**, *курсив*, [колір=#b3261e]червоний текст[/колір], [розмір=28]великий[/розмір], [шрифт=Georgia]інший шрифт[/шрифт], [посилання](https://example.com).",,,так,,,,,,,,,,
-Новини,,посилання,,,https://www.facebook.com/,,ні,,,,,,,,,,
+Приклад оформлення: **жирний**, *курсив*, [колір=#b3261e]червоний текст[/колір], [розмір=28]великий[/розмір], [шрифт=Georgia]інший шрифт[/шрифт], [посилання](https://example.com).",,,так,,,,,,,,,,,,
+Новини,,посилання,,,https://www.facebook.com/,,ні,,,,,,,,,,,,
 Партнерам,Співпраця,текст,Співпраця,"Ми відкриті до спільних проєктів: зйомок, показів, майстер-класів, практики студентів і замовлень на аудіовізуальні матеріали.
-Напишіть нам, і ми обговоримо формат співпраці.",,,так,,,,,,,,,,
-Партнерам,Випускники,текст,Наші випускники,"Історії випускників, їхні роботи та місця, де вони працюють сьогодні.",,,так,,,,,,,,,,
-Партнерам,Практика,текст,Практика студентів,"Студенти проходять практику в студіях, на телебаченні, у медіа та рекламних агенціях. Якщо ви можете прийняти практикантів, зв’яжіться з нами.",,,так,,,,,,,,,,
-Портфоліо,Фото,до-після,Ретуш: до і після,"Перше фото — до обробки, друге — після. Посилання на обидва через пробіл.",,https://drive.google.com/file/d/ВСТАВТЕ_ID_1/view https://drive.google.com/file/d/ВСТАВТЕ_ID_2/view,ні,,,400,,,,,,,
+Напишіть нам, і ми обговоримо формат співпраці.",,,так,,,,,,,,,,,,
+Партнерам,Випускники,текст,Наші випускники,"Історії випускників, їхні роботи та місця, де вони працюють сьогодні.",,,так,,,,,,,,,,,,
+Партнерам,Практика,текст,Практика студентів,"Студенти проходять практику в студіях, на телебаченні, у медіа та рекламних агенціях. Якщо ви можете прийняти практикантів, зв’яжіться з нами.",,,так,,,,,,,,,,,,
+Портфоліо,Фото,до-після,Ретуш: до і після,"Перше фото — до обробки, друге — після. Посилання на обидва через пробіл.",,https://drive.google.com/file/d/ВСТАВТЕ_ID_1/view https://drive.google.com/file/d/ВСТАВТЕ_ID_2/view,ні,,,400,,,,,,,,,
 Контакти,,текст,Контакти,"Адреса: [адреса закладу]
 Голова комісії: [Прізвище Ім’я По батькові]
 Телефон: [номер]
-E-mail: [адреса]",,,так,,,,,,,,,,
+E-mail: [адреса]",,,так,,,,,,,,,,,,
 `;
 
 /* ================= 3. ДОПОМІЖНІ ФУНКЦІЇ ================= */
 // Скорочення: знайти елемент за id.
 const $ = id => document.getElementById(id);
 // Порівнянний вигляд тексту: малі літери, без апострофів і зайвих пробілів.
+const slug = s => norm(s).replace(/[^\p{L}\p{N}]+/gu, "-").replace(/^-+|-+$/g, "");   // «Про комісію» → «про-комісію»
 const norm = s => String(s || "").toLowerCase().replace(/['’ʼ`]/g, "").replace(/\s+/g, " ").trim();
 // Усі колонки таблиці, які розуміє сайт.
-const COLS = ["Розділ","Підрозділ","Тип","Заголовок","Текст","Посилання","Зображення","Показувати","Колір","Розмір","Ширина","Шрифт","Вирівнювання","Докладно","Грамоти","Діє з","Діє до","Кнопки"];
+const COLS = ["Розділ","Підрозділ","Тип","Заголовок","Текст","Посилання","Зображення","Показувати","Колір","Розмір","Ширина","Шрифт","Вирівнювання","Докладно","Грамоти","Діє з","Діє до","Кнопки","Фото у вікні","Якір"];
 // Підбирає правильну назву колонки (регістр і пробіли неважливі).
-const ALIAS = {"діє від": "Діє з", "показувати з": "Діє з", "показувати від": "Діє з", "від": "Діє з", "діє по": "Діє до", "показувати до": "Діє до", "до": "Діє до"};
+const ALIAS = {"фото профілю": "Фото у вікні", "фото в вікні": "Фото у вікні", "велике фото": "Фото у вікні", "id": "Якір", "ідентифікатор": "Якір", "код": "Якір", "anchor": "Якір", "діє від": "Діє з", "показувати з": "Діє з", "показувати від": "Діє з", "від": "Діє з", "діє по": "Діє до", "показувати до": "Діє до", "до": "Діє до"};
 const canon = x => COLS.find(c => norm(c) === norm(x)) || ALIAS[norm(x)] || String(x).trim();
 // Показує жовту смугу з повідомленням угорі сторінки.
 function warn(m){ const n = $("note"); n.hidden = false; n.textContent = m; if (n.dataset) n.dataset.nav = "1"; }
@@ -409,6 +419,55 @@ function openDD(sec){
   dd.hidden = false; const r = btn.getBoundingClientRect();
   dd.style.top = Math.round(r.bottom) + "px"; dd.style.left = Math.max(8, Math.min(r.left, window.innerWidth - dd.offsetWidth - 8)) + "px";
 }
+// ---- Посилання на конкретний розділ, підрозділ, картку чи кнопку: #розділ/підрозділ/картка/кнопка ----
+let LAST_HASH = "", CURP = "", CURF = "", APPLYING = false;
+const LINKS = /[?&]links\b/.test(location.search);
+// Будує частину адреси після # (порожній підрозділ позначається «_»).
+function hashFor(sec, sub, card, btn){
+  const a = [slug(sec), slug(sub) || "_", card || "", btn || ""];
+  while (a.length > 1 && (!a[a.length - 1] || a[a.length - 1] === "_")) a.pop();
+  return "#" + a.join("/");
+}
+// Записує поточне місце в адресу сторінки (history.pushState — щоб працювала кнопка «Назад»).
+function setHash(sec, sub, card, btn, push){
+  if (APPLYING) return;
+  const hs = hashFor(sec, sub, card, btn); if (hs === LAST_HASH) return; LAST_HASH = hs;
+  try { history[push ? "pushState" : "replaceState"](null, "", location.pathname + location.search + hs); } catch (e) {}
+}
+// Підсвічує елемент, на який веде посилання.
+function flash(el){ el.classList.add("flash"); setTimeout(() => el.classList.remove("flash"), 2600); }
+// Відкриває місце, вказане в адресі (розділ → підрозділ → картка → кнопка).
+function applyHash(){
+  let raw = ""; try { raw = decodeURIComponent((location.hash || "").replace(/^#\/?/, "")); } catch (e) { return; }
+  if (!raw || location.hash === LAST_HASH) return;
+  const seg = raw.split("/").map(slug), sec = [...S.keys()].find(k => slug(k) === seg[0]); if (!sec) return;
+  const subs = [...S.get(sec).keys()], sub = seg[1] === "_" ? "" : (seg[1] ? subs.find(k => slug(k) === seg[1]) : undefined);
+  APPLYING = true;
+  go(sec, sub, true);
+  if (seg[2]) {
+    const el = [...document.querySelectorAll("#main [data-anchor]")].find(x => x.dataset.anchor === seg[2]);
+    if (el) {
+      if (el.dataset.p !== undefined) { openProfile(+el.dataset.p); if (seg[3]) { const b = CURB.find(x => slug(x.name) === seg[3]); if (b) openFolder(b); } }
+      else if (el.dataset.go !== undefined) el.click();
+      else { el.scrollIntoView({block: "center"}); flash(el); }
+    }
+  }
+  APPLYING = false; LAST_HASH = location.hash;
+}
+function closeProfile(){ $("pm").hidden = true; CURP = ""; setHash(cur.sec, cur.sub); }
+function closeFolder(){ $("fm").hidden = true; CURF = ""; setHash(cur.sec, cur.sub, CURP); }
+// Копіює адресу в буфер обміну та коротко підтверджує це на кнопці.
+function copyLink(hs, btn){
+  const url = location.href.split("#")[0] + hs, old = btn.textContent;
+  const done = () => { btn.textContent = "✓ Скопійовано"; setTimeout(() => { btn.textContent = old; }, 1600); };
+  if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(url).then(done, () => prompt("Скопіюйте посилання:", url)); else prompt("Скопіюйте посилання:", url);
+}
+// Режим адміна (?links=1): біля кожного блоку з’являється кнопка 🔗 для копіювання посилання.
+function addLinkChips(){
+  if (!LINKS) return;
+  document.querySelectorAll("#main [data-anchor]").forEach(el => { if (!el.querySelector(":scope > .lnk")) el.insertAdjacentHTML("afterbegin", `<button type="button" class="lnk" data-copy="${esc(hashFor(cur.sec, cur.sub, el.dataset.anchor))}" title="Копіювати посилання">🔗</button>`); });
+  const h1 = document.querySelector("#main h1"); if (h1) h1.insertAdjacentHTML("beforeend", `<button type="button" class="lnk" data-copy="${esc(hashFor(cur.sec, cur.sub))}" title="Копіювати посилання на цю сторінку">🔗</button>`);
+}
 // Прокручує рядок вкладок так, щоб активна кнопка була посередині.
 function centerActive(box){ const b = box && box.querySelector('[aria-current="true"]'); if (b && box.scrollWidth > box.clientWidth) box.scrollLeft = b.offsetLeft - (box.clientWidth - b.offsetWidth) / 2; }
 // Чи є між елементом і вмістом контейнер, який сам гортається вбік (тоді жест не перемикає розділ).
@@ -440,11 +499,13 @@ function build(csv){
     if (!m.has(k)) m.set(k, []);
     m.get(k).push(r);
   });
-  go([...S.keys()][0]);
+  go([...S.keys()][0], undefined, true);
+  applyHash();
 }
 
 // Відкриває розділ (і підрозділ) за назвою; показує підказку, якщо розділу немає.
-function go(sec, sub){
+function go(sec, sub, noHash){
+  $("pm").hidden = true; $("fm").hidden = true; CURP = ""; CURF = "";
   let s = String(sec || "");
   if (sub === undefined && s.includes("/")) [s, sub] = s.split("/");
   const key = [...S.keys()].find(k => norm(k) === norm(s));
@@ -454,6 +515,7 @@ function go(sec, sub){
   const subs = [...S.get(key).keys()], pick = subs.find(k => norm(k) === norm(sub));
   cur.sub = pick !== undefined ? pick : subs[0];
   draw();
+  if (!noHash) setHash(cur.sec, cur.sub, "", "", true);
   // Не повертаємо до банера: прокручуємо лише якщо користувач уже опустився нижче початку вмісту
   const lay = $("layout"), navH = $("top").offsetHeight; lay.style.scrollMarginTop = navH + "px";
   if (lay.getBoundingClientRect().top < navH - 1) lay.scrollIntoView({block: "start"});
@@ -486,7 +548,8 @@ async function listFolder(id){
 async function openProfile(i){
   const r = PROF[i]; if (!r) return;
   const btns = parseButtons(r["Кнопки"]); CURB = btns;
-  const img = imgUrl(r["Зображення"]), toks = (r["Грамоти"] || "").split(/[\s;]+/).filter(u => /^https?:\/\//i.test(u));
+  CURP = slug(r["Якір"] || r["Заголовок"]); setHash(cur.sec, cur.sub, CURP);
+  const img = imgUrl(r["Фото у вікні"] || r["Зображення"]), toks = (r["Грамоти"] || "").split(/[\s;]+/).filter(u => /^https?:\/\//i.test(u));
   $("pmc").innerHTML = `<div class="pmh">${img ? `<img src="${esc(img)}" referrerpolicy="no-referrer" alt="">` : ""}<div><h2>${fmt(r["Заголовок"])}</h2>${r["Текст"] ? `<p class="pmr">${fmt(r["Текст"]).replace(/\n+/g, "<br>")}</p>` : ""}${paras(r["Докладно"])}${btns.length ? `<div class="pbtns">${btns.map((b, i) => `<button type="button" class="btn pb" data-pb="${i}">${esc(b.name)}</button>`).join("")}</div>` : ""}</div></div>${toks.length ? `<h3>Грамоти, нагороди та сертифікати</h3><div class="gal pmg"></div><div class="pmf"></div>` : ""}`;
   $("pm").hidden = false;
   if (!toks.length) return;
@@ -572,6 +635,7 @@ async function openFolder(b){
   if (!b) return;
   const id = driveId(b.url);
   if (!/\/folders\//.test(b.url) || !id) { window.open(b.url, "_blank", "noopener"); return; }
+  CURF = slug(b.name); setHash(cur.sec, cur.sub, CURP, CURF);
   $("fmt").textContent = b.name; $("fmc").innerHTML = "<p>Завантаження…</p>"; $("fm").hidden = false;
   if (!DRIVE_API_KEY) { $("fmc").innerHTML = `<iframe class="gridf" src="https://drive.google.com/embeddedfolderview?id=${esc(id)}#grid" title="${esc(b.name)}"></iframe>`; return; }
   try {
@@ -715,7 +779,12 @@ function linkCard(r, lu){
 /* ================= 4. БЛОКИ СТОРІНКИ (рядок таблиці → HTML) ================= */
 // Обгортка зі шириною та вирівнюванням для типів без власного вирівнювання (відео, вбудова, панорама, карта, галерея, файл, посилання).
 const WRAP_TYPES = new Set(["відео", "вбудова", "панорама", "карта", "галерея", "файл", "посилання"]);
+// Додає якір (для посилання на блок): назва береться з «Якір» або «Заголовок».
 function block(r){
+  const html = block1(r), a = slug(r["Якір"] || r["Заголовок"] || "");
+  return html && a ? `<div class="anc" data-anchor="${esc(a)}">${html}</div>` : html;
+}
+function block1(r){
   const html = block0(r), tn = String(r["Тип"] || "").toLowerCase().replace(/['’ʼ`\-_\s]/g, "");
   const alRaw = (r["Вирівнювання"] || "").trim().toLowerCase(), wRaw = (r["Ширина"] || "").trim().toLowerCase();
   if (!html || !WRAP_TYPES.has(tn) || !(alRaw || wRaw)) return html;
@@ -754,7 +823,7 @@ function card(r){
   let pa = ""; if (hasP) { PROF.push(r); pa = ` data-p="${PROF.length - 1}" role="button" tabindex="0"`; }
   const img = imgUrl(r["Зображення"]), tag = la && !la.includes("data-go") ? "a" : "div";
   const hint = la || hasP ? "" : ` data-hint="${esc("Картка «" + r["Заголовок"] + "» не пов’язана з розділом. У колонці «Посилання» зараз: «" + (r["Посилання"] || "") + "». Напишіть там #Назва розділу (як у колонці «Розділ»).")}"`;
-  return `<${tag} class="card" ${la}${pa}${hint}>${img?`<img src="${esc(img)}" referrerpolicy="no-referrer" alt="" loading="lazy">`:""}<div><b>${esc(r["Заголовок"])}</b><span>${inTxt ? "" : fmt(r["Текст"]).replace(/\n+/g, " ")}</span>${hasP ? '<small class="more">Докладніше</small>' : ""}</div></${tag}>`;
+  return `<${tag} class="card" ${la}${pa}${hint} data-anchor="${esc(slug(r["Якір"] || r["Заголовок"]))}">${img?`<img src="${esc(img)}" referrerpolicy="no-referrer" alt="" loading="lazy">`:""}<div><b>${esc(r["Заголовок"])}</b><span>${inTxt ? "" : fmt(r["Текст"]).replace(/\n+/g, " ")}</span>${hasP ? '<small class="more">Докладніше</small>' : ""}</div></${tag}>`;
 }
 
 // Малює меню, ліву панель і блоки вибраного розділу.
@@ -774,7 +843,7 @@ function draw(){
   flush();
   $("main").innerHTML = html;
   hydrate();
-  centerActive($("top")); centerActive($("side"));
+  centerActive($("top")); centerActive($("side")); addLinkChips();
 }
 
 document.addEventListener("error", e => {
@@ -792,23 +861,26 @@ const lbMove = d => { lb.i = (lb.i + d + lb.urls.length) % lb.urls.length; lbSho
 document.addEventListener("keydown", e => {
   if (!$("lb").hidden) { if (e.key === "Escape") $("lb").hidden = true; if (e.key === "ArrowLeft") lbMove(-1); if (e.key === "ArrowRight") lbMove(1); return; }
   if (e.key === "Escape") { const f = document.querySelector(".fsw.fs"); if (f) { f.classList.remove("fs"); return; } }
-  if (!$("fm").hidden && e.key === "Escape") { $("fm").hidden = true; return; }
-  if (!$("pm").hidden && e.key === "Escape") { $("pm").hidden = true; return; }
+  if (!$("fm").hidden && e.key === "Escape") { closeFolder(); return; }
+  if (!$("pm").hidden && e.key === "Escape") { closeProfile(); return; }
   const t = e.target; if ((e.key === "Enter" || e.key === " ") && t && t.dataset && (t.dataset.go !== undefined || t.dataset.p !== undefined)) { e.preventDefault(); t.click(); }
 });
 document.addEventListener("input", e => { const t = e.target; if (t.classList && t.classList.contains("bar")) t.parentNode.style.setProperty("--p", t.value + "%"); });
 document.addEventListener("fullscreenchange", () => window.dispatchEvent(new Event("resize")));
 document.addEventListener("click", e => {
+  const cp = e.target.closest("[data-copy]"); if (cp) { e.preventDefault(); e.stopPropagation(); copyLink(cp.dataset.copy, cp); return; }
+  if (e.target.id === "pml") { copyLink(hashFor(cur.sec, cur.sub, CURP), e.target); return; }
+  if (e.target.id === "fml") { copyLink(hashFor(cur.sec, cur.sub, CURP, CURF), e.target); return; }
   if (!e.target.closest("#dd, nav.top [data-sec]")) closeDD();
   const ddi = e.target.closest(".ddi"); if (ddi) { go(ddi.dataset.dsec, ddi.dataset.dsub); return; }
   const fsb = e.target.closest("[data-fs]"); if (fsb) { toggleFs(fsb.closest(".fsw")); return; }
   const pb = e.target.closest(".pb"); if (pb) { openFolder(CURB[+pb.dataset.pb]); return; }
   const fi = e.target.closest(".fi"); if (fi) { openFile(+fi.dataset.f); return; }
-  if (e.target.id === "fmx" || e.target.id === "fm") { $("fm").hidden = true; return; }
+  if (e.target.id === "fmx" || e.target.id === "fm") { closeFolder(); return; }
   const ph = e.target.closest("img.photo"); if (ph && !ph.closest(".gal")) { lb = {urls: [ph.src], i: 0}; $("lb").hidden = false; lbShow(); return; }
   const g = e.target.closest(".gal button");
   if (g) { lb = {urls: g.closest(".gal")._urls || [], i: +g.dataset.i}; $("lb").hidden = false; lbShow(); return; }
-  if (e.target.id === "pmx" || e.target.id === "pm") { $("pm").hidden = true; return; }
+  if (e.target.id === "pmx" || e.target.id === "pm") { closeProfile(); return; }
   const pc = e.target.closest(".card[data-p]"); if (pc) { openProfile(+pc.dataset.p); return; }
   if (e.target.id === "lbx" || e.target.id === "lb") { $("lb").hidden = true; return; }
   if (e.target.id === "lbp") { lbMove(-1); return; }
@@ -833,6 +905,8 @@ if (window.matchMedia && matchMedia("(hover: hover)").matches) {
   $("top").addEventListener("mouseover", e => { const b = e.target.closest("[data-sec]"); if (b && ddEnabled(b.dataset.sec)) { stop(); openDD(b.dataset.sec); } else if (b) closeDD(); });
   $("top").addEventListener("mouseleave", later); $("dd").addEventListener("mouseenter", stop); $("dd").addEventListener("mouseleave", later);
 }
+
+window.addEventListener("hashchange", applyHash); window.addEventListener("popstate", applyHash);
 
 /* ================= 7. ЗАПУСК ================= */
 (async () => {
